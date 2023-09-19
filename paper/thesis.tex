@@ -1,6 +1,6 @@
 % \documentclass[german,bachelor,ul]{webisthesis} % Weimar
 % \documentclass[german,bachelor,fsu]{webisthesis} % Jena
-\documentclass[english,bachelor,lu]{webisthesis} % Leipzig
+\documentclass[english,bachelor,ul]{webisthesis} % Leipzig
 %
 % Non-default programme
 % ---------------------
@@ -172,7 +172,7 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \end{table*}
 \fi
 
-% MY TABLE
+% MY ACC TABLE
 \begin{table*}[!t]%
 \centering
 \fontsize{8pt}{9pt}\selectfont%
@@ -203,6 +203,36 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \label{table-results-acc}
 \end{table*}
 
+
+% MY AUC TABLE
+\begin{table*}[!t]%
+\centering
+\fontsize{8pt}{9pt}\selectfont%
+\renewcommand{\tabcolsep}{12pt}%
+\begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
+\toprule
+\textbf{Dataset} & \textbf{Model} & \multicolumn{8}{c}{\textbf{Query Strategy}}\\
+\cmidrule{3-10} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}Unknown}\\
+\midrule
+
+\multirow{2}{*}{AG's News}  & BERT & 0.79 & 0.015 & 0.8 & 0.009 & \bfseries 0.735 & \bfseries 0.02 & 0 & 0\\ 
+ & SetFit & 0.865 & 0.007 & \bfseries 0.881 & \bfseries 0.004 & 0.871 & 0.005 & 0 & 0 \\
+
+\midrule
+
+\multirow{2}{*}{Movie Review}  & BERT & 0.75 & 0.007 & 0.746 & 0.011 & \bfseries 0.718 & \bfseries 0.009 & 0 & 0\\ 
+ & SetFit & 0.854 & 0.002 & \bfseries 0.864 & \bfseries 0.005 & 0.856 & 0.003 & 0 & 0 \\
+
+\midrule
+
+\multirow{2}{*}{TREC-6}  & BERT & 0.674 & 0.029 & 0.709 & 0.008 & \bfseries 0.594 & \bfseries 0.022 & 0 & 0\\ 
+ & SetFit & 0.914 & 0.011 & \bfseries 0.923 & \bfseries 0.007 & 0.896 & 0.015 & 0 & 0 \\
+ 
+\bottomrule
+\end{tabular}
+\caption{Final AUC per dataset, model, and query strategy. We report the mean and standard deviation over five runs. The best result per dataset is printed in bold.}
+\label{table-results-acc}
+\end{table*}
 
 \chapter{Discussion}
 
