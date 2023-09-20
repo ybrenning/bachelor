@@ -110,41 +110,103 @@ def assemble_df(df, csv_name, index_col=None):
     return df_all
 
 
+def plot_dataset(results, dataset, ax):
+    results_random = results.query(f'`params.dataset_name` == "{dataset}" and `params.query_strategy` == "random"')
+    results_bt = results.query(f'`params.dataset_name` == "{dataset}" and `params.query_strategy` == "lc-bt"')
+    results_gc = results.query(f'`params.dataset_name` == "{dataset}" and `params.query_strategy` == "gc"')
+
+    df_acc_random = assemble_df(results_random, 'results.csv')
+    df_acc_bt = assemble_df(results_bt, 'results.csv')
+    df_acc_gc = assemble_df(results_gc, 'results.csv')
+
+    sample_sizes = df_acc_random['num_samples'].unique()
+
+    ax.set_ylim([0.2, 1.0])
+    ax.xaxis.set_ticks([c for i, c in enumerate(sample_sizes)
+                               if i % 5 == 0])
+
+    ax.xaxis.set_ticklabels(['25', '', '275', '', '525'])
+
+    data_random = []
+
+    for clf in ['transformer', 'setfit']:
+        run = []
+        for run_id in df_acc_random['run_id'].unique():
+            run.append(df_acc_random.query(f'`classifier` == "{clf}" and run_id == {run_id}')['test_acc'].tolist())
+        data_random.append(run)
+
+    plot_learning_curve(
+        ax,
+        sample_sizes,
+        np.array(data_random, dtype=float),
+        ['BERT', 'SetFit'],
+        strategy_name='random',
+        show_uncertainty='tube-sd'
+    )
+
+    data_bt = []
+    for clf in ['transformer', 'setfit']:
+        run = []
+        for run_id in df_acc_bt['run_id'].unique():
+            run.append(df_acc_bt.query(f'`classifier` == "{clf}" and run_id == {run_id}')['test_acc'].tolist())
+        data_bt.append(run)
+
+    plot_learning_curve(
+        ax,
+        sample_sizes,
+        np.array(data_bt, dtype=float),
+        ['BERT', 'SetFit'],
+        strategy_name='lc-bt',
+        show_uncertainty='tube-sd'
+    )
+
+    data_gc = []
+    for clf in ['transformer', 'setfit']:
+        run = []
+        for run_id in df_acc_gc['run_id'].unique():
+            run.append(df_acc_gc.query(f'`classifier` == "{clf}" and run_id == {run_id}')['test_acc'].tolist())
+        data_gc.append(run)
+
+    plot_learning_curve(
+        ax,
+        sample_sizes,
+        np.array(data_gc, dtype=float),
+        ['BERT', 'SetFit'],
+        strategy_name='gc',
+        show_uncertainty='tube-sd'
+    )
+
+    # ax.set_xlabel('number of instances')
+    # ax.set_ylabel('accuracy')
+    ax.get_legend().remove()
+
+
 def main():
     results = get_results('yb-coresets')
 
     results = check_for_duplicates(results)
     results = check_for_reproduciblity(results)
 
-    results = results.query('`params.dataset_name` == "mr" and `params.query_strategy` == "random"')
+    fig, axs = plt.subplots(1, 3, sharex=True, sharey=True)
+    fig.set_figheight(5)
+    fig.set_figwidth(6*3)
 
-    df_acc = assemble_df(results, 'results.csv')
+    datasets = ['mr', 'ag-news', 'trec']
+    for i in range(0, 3):
+        plot_dataset(results, datasets[i], axs[i])
+        axs[i].set_title(datasets[i], fontsize=20)
 
-    plt.figure(figsize=(9.7, 6))
-    ax = plt.gca()
-    ax.set_ylim([0.2, 1.0])
+    plt.figlegend(
+        axs[0].get_lines(),
+        ['BERT / RS', 'SetFit / RS', 'BERT / BT', 'SetFit / BT', 'BERT / CS', 'SetFit / CS'],
+        loc='upper center',
+        prop={'size': 16},
+        ncols=3
+    )
 
-    sample_sizes = df_acc['num_samples'].unique()
-
-    ax.xaxis.set_ticks([c for i, c in enumerate(sample_sizes)
-                               if i % 5 == 0])
-    ax.xaxis.set_ticklabels(['25', '', '275', '', '525'])
-
-    data = []
-
-    for clf in ['transformer', 'setfit']:
-        run = []
-        for run_id in df_acc['run_id'].unique():
-            run.append(df_acc.query(f'`classifier` == "{clf}" and run_id == {run_id}')['test_acc'].tolist())
-        data.append(run)
-
-    plot_learning_curve(ax, sample_sizes, np.array(data, dtype=float), ['BERT', 'SetFit'], show_uncertainty='tube-sd')
-
-    # ax.set_xlabel('accuracy')
-    # ax.set_ylabel('number of instances')
-
-    # plt.savefig('learning-curve.svg')
-    plt.savefig('mr-random.pdf')
+    # fig.legend(loc='upper left', ncols=3)
+    plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.7)
+    plt.savefig('plots.pdf')
     plt.show()
 
 
