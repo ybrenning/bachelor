@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
+from matplotlib.legend_handler import HandlerBase
 
 from mlflow import get_experiment_by_name, search_runs
 from pathlib import Path
@@ -188,24 +189,55 @@ def main():
     results = check_for_reproduciblity(results)
 
     fig, axs = plt.subplots(1, 3, sharex=True, sharey=True)
-    fig.set_figheight(5)
-    fig.set_figwidth(6*3)
+    fig.set_figheight(7.5 * 0.7)
+    fig.set_figwidth(6*3 * 0.7)
 
     datasets = ['mr', 'ag-news', 'trec']
     for i in range(0, 3):
         plot_dataset(results, datasets[i], axs[i])
         axs[i].set_title(datasets[i], fontsize=20)
 
-    plt.figlegend(
-        axs[0].get_lines(),
-        ['BERT / RS', 'SetFit / RS', 'BERT / BT', 'SetFit / BT', 'BERT / CS', 'SetFit / CS'],
-        loc='upper center',
-        prop={'size': 16},
-        ncols=3
+    #plt.figlegend(
+    #    axs[0].get_lines(),
+    #    ['BERT / RS', 'SetFit / RS', 'BERT / BT', 'SetFit / BT', 'BERT / CS', 'SetFit / CS'],
+    #    loc='upper center',
+    #    prop={'size': 16},
+    #    ncols=3
+    #)
+    from matplotlib.patches import Rectangle
+
+    extra = Rectangle((0, 0), 1, 1, fc="w", fill=False, edgecolor='none', linewidth=0)
+    # print(axs[0].get_lines())
+    lines = axs[0].get_lines()
+
+    legend_handle = [
+        extra, extra, extra, extra,
+        lines[0], lines[1], extra,
+        lines[2], lines[3], extra,
+        lines[4], lines[5], extra,
+        extra, extra
+    ]
+
+    label_col_one = ['', 'BERT', 'SetFit']
+    label_rs = ['RS']
+    label_bt = ['BT']
+    label_gc = ['CS']
+    label_gc_tsne = ['CS-TSNE']
+    label_empty = ['']
+    legend_labels = np.concatenate(
+        [label_col_one, label_rs, label_empty * 2, label_bt, label_empty * 2, label_gc, label_empty * 2, label_gc_tsne, label_empty * 2]
     )
+    fig.legend(legend_handle, legend_labels,
+              loc='upper center', ncol=5, handletextpad=-2, prop={'size': 14})
+
+    # leg1 = plt.legend(axs[0].get_lines(), ['BERT / RS', 'SetFit / RS', 'BERT / BT', 'SetFit / BT', 'BERT / CS', 'SetFit / CS'])
+    # fig.add_artist(leg1)
 
     # fig.legend(loc='upper left', ncols=3)
-    plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.7)
+
+    fig.text(0.5, 0.1, 'Number of instances', ha='center', va='center', fontsize=20)
+    fig.text(0.04, 0.45, 'Accuracy', ha='center', va='center', rotation='vertical', fontsize=20)
+    plt.subplots_adjust(left=0.1, right=0.9, bottom=0.2, top=0.7)
     plt.savefig('plots.pdf')
     plt.show()
 
