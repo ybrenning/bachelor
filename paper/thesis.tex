@@ -126,7 +126,12 @@ Generally, text classification methods can be divided into the following phases:
 
 \section{Dimensionality Reduction}
 
-As mentioned earlier, one of the major challenges of the Core-Set approach (among others) is handling data points with a higher dimensionality (\cite{DBLP:conf/iccv/SinhaED19}). Broadly speaking, this is a phenomenon coined by Richard E. Bellman known as the \textit{curse of dimensionality} (\cite{franccois2007high}). As a result, many algorithms have been developed to transform data from a high-dimensional space into a low-dimensional space (\cite{van2009dimensionality}). This task directly poses another challenge: managing to reduce the dimensionality of the data while still being able to retain the highest possible amount of information.
+As mentioned earlier, one of the major challenges of the Core-Set approach (among others) is handling data points with a higher dimensionality (\cite{DBLP:conf/iccv/SinhaED19}). Broadly speaking, this is a phenomenon coined by Richard E. Bellman known as the \textit{curse of dimensionality} (\cite{franccois2007high}). As a result, many algorithms have been developed to transform data from a high-dimensional space into a low-dimensional space. This task directly poses another challenge: managing to reduce the dimensionality of the data while still being able to retain the highest possible amount of information. 
+
+One such method is the Principal Components Analysis (PCA), which is one of the most popular linear techniques for dimensionality reduction (\cite{van2009dimensionality}). In essence, PCA linearly transforms the data into a representation that attempts to closely describe the variance of the initial data (\cite{jolliffe2016principal}). Other linear techniques include Linear Discriminant Analysis (LDA) and Non-negative Matrix Factorization (NMF).
+
+These techniques can be powerful, however they often miss important non-linear structures in high-dimensional data. Non-linear techniques have been developed such as Isometric Mapping (Isomap) and t-distributed Stochastic Neighbor Embedding (t-SNE). The latter is a relatively modern approach that has improved upon many other non-linear techniques in creating a single map that reveals structure on many different scales. In addition, it manages to reduce the tendency of SNE to crowd data points together at the center (\cite{van2008visualizing}).
+
 
 \chapter{Approach}
 
@@ -180,20 +185,20 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
 \toprule
 \textbf{Dataset} & \textbf{Model} & \multicolumn{8}{c}{\textbf{Query Strategy}}\\
-\cmidrule{3-10} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}Unknown}\\
+\cmidrule{3-10} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE}\\
 \midrule
 
-\multirow{2}{*}{AG's News}  & BERT & 0.78 & 0.171 & 0.79 & 0.161 & \bfseries 0.727 & \bfseries 0.175 & 0 & 0\\ 
+\multirow{2}{*}{AGN}  & BERT & 0.78 & 0.171 & 0.79 & 0.161 & \bfseries 0.727 & \bfseries 0.175 & 0.782 & 0.166\\ 
  & SetFit & 0.862 & 0.044 & \bfseries 0.877 & \bfseries 0.048 & 0.868 & 0.052 & 0 & 0 \\
 
 \midrule
 
-\multirow{2}{*}{Movie Review}  & BERT & 0.747 & 0.089 & 0.743 & 0.091 & \bfseries 0.715 & \bfseries 0.097 & 0 & 0\\ 
- & SetFit & 0.853 & 0.015 & \bfseries 0.863 & \bfseries 0.019 & 0.856 & 0.018 & 0 & 0 \\
+\multirow{2}{*}{MR}  & BERT & 0.747 & 0.089 & 0.743 & 0.091 & \bfseries 0.715 & \bfseries 0.097 & 0.749 & 0.085\\ 
+ & SetFit & 0.853 & 0.015 & \bfseries 0.863 & \bfseries 0.019 & 0.856 & 0.018 & 0.861 & 0.016 \\
 
 \midrule
 
-\multirow{2}{*}{TREC-6}  & BERT & 0.668 & 0.251 & 0.702 & 0.246 & \bfseries 0.592 & \bfseries 0.256 & 0 & 0\\ 
+\multirow{2}{*}{TREC}  & BERT & 0.668 & 0.251 & 0.702 & 0.246 & \bfseries 0.592 & \bfseries 0.256 & 0.671 & 0.251\\ 
  & SetFit & 0.907 & 0.076 & \bfseries 0.916 & \bfseries 0.093 & 0.89 & 0.111 & 0 & 0 \\
  
 \bottomrule
@@ -212,7 +217,7 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
 \toprule
 \textbf{Dataset} & \textbf{Model} & \multicolumn{8}{c}{\textbf{Query Strategy}}\\
-\cmidrule{3-10} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}Unknown}\\
+\cmidrule{3-10} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE}\\
 \midrule
 
 \multirow{2}{*}{AG's News}  & BERT & 0.79 & 0.015 & 0.8 & 0.009 & \bfseries 0.735 & \bfseries 0.02 & 0 & 0\\ 
@@ -220,7 +225,7 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 
 \midrule
 
-\multirow{2}{*}{Movie Review}  & BERT & 0.75 & 0.007 & 0.746 & 0.011 & \bfseries 0.718 & \bfseries 0.009 & 0 & 0\\ 
+\multirow{2}{*}{Movie Review}  & BERT & 0.75 & 0.007 & 0.746 & 0.011 & \bfseries 0.718 & \bfseries 0.009 & 0.752 & 0.016\\ 
  & SetFit & 0.854 & 0.002 & \bfseries 0.864 & \bfseries 0.005 & 0.856 & 0.003 & 0 & 0 \\
 
 \midrule
