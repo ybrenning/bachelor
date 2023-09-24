@@ -148,14 +148,14 @@ Below, I have demonstrated the effect of t-SNE on a training set of the well-kno
 
 \begin{figure}[htpb]
     \centering
-    \includegraphics[width=1\textwidth]{reductions-mr-1000.jpg}
+    \includegraphics[width=1\textwidth]{img/reductions-mr-1000.jpg}
     \caption{t-SNE reductions with various perplexity values after 1,000 iterations performed on the embedded and normalized Movie Review dataset.}
     \label{fig:reductions-mr-1000}
 \end{figure}
 
 \begin{figure}[htpb]
     \centering
-    \includegraphics[width=1\textwidth]{reductions-mr-5000.jpg}
+    \includegraphics[width=1\textwidth]{img/reductions-mr-5000.jpg}
     \caption{t-SNE reductions with various perplexity values after 5,000 iterations performed on the embedded and normalized Movie Review dataset.}
     \label{fig:reductions-mr-5000}
 \end{figure}
@@ -164,7 +164,16 @@ Note that the samples have been embedded using BERT and normalized prior to the 
 
 Starting at a perplexity of 30, the points begin to cluster more and more tightly. The clusters do not seem to separate in any of the runs -- it is important to note, however, that distances and sizes of the clusters do necessarily carry any meaning when examining the plots (\cite{wattenberg2016how}, \cite{vanHomepage}).
 
-It is also worth noting that the differences between 1,000 and 5,000 iterations appear quite small despite the relative increase in computations.
+It is also worth noting that the differences between 1,000 and 5,000 iterations appear quite small despite the relative increase in computations. 
+
+\dots
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=1\textwidth]{img/reductions-ag-news-1000.jpg}
+    \caption{t-SNE reductions with various perplexity values after 1,000 iterations performed on the embedded and normalized AG's News dataset.}
+    \label{fig:reductions-agnews-1000}
+\end{figure}
 
 \chapter{Experiment}
 
