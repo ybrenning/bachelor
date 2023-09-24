@@ -115,10 +115,12 @@ def plot_dataset(results, dataset, ax):
     results_random = results.query(f'`params.dataset_name` == "{dataset}" and `params.query_strategy` == "random"')
     results_bt = results.query(f'`params.dataset_name` == "{dataset}" and `params.query_strategy` == "lc-bt"')
     results_gc = results.query(f'`params.dataset_name` == "{dataset}" and `params.query_strategy` == "gc"')
+    results_gc_tsne = results.query(f'`params.dataset_name` == "{dataset}" and `params.query_strategy` == "gc-tsne"')
 
     df_acc_random = assemble_df(results_random, 'results.csv')
     df_acc_bt = assemble_df(results_bt, 'results.csv')
     df_acc_gc = assemble_df(results_gc, 'results.csv')
+    df_acc_gc_tsne = assemble_df(results_gc_tsne, 'results.csv')
 
     sample_sizes = df_acc_random['num_samples'].unique()
 
@@ -177,12 +179,28 @@ def plot_dataset(results, dataset, ax):
         show_uncertainty='tube-sd'
     )
 
+    data_gc_tsne = []
+    for clf in ['transformer', 'setfit']:
+        run = []
+        for run_id in df_acc_gc_tsne['run_id'].unique():
+            run.append(df_acc_gc_tsne.query(f'`classifier` == "{clf}" and run_id == {run_id}')['test_acc'].tolist())
+        data_gc_tsne.append(run)
+
+    plot_learning_curve(
+        ax,
+        sample_sizes,
+        np.array(data_gc_tsne, dtype=float),
+        ['BERT', 'SetFit'],
+        strategy_name='gc-tsne',
+        show_uncertainty='tube-sd'
+    )
+
     # ax.set_xlabel('number of instances')
     # ax.set_ylabel('accuracy')
     ax.get_legend().remove()
 
 
-def main():
+def plot_all_datasets():
     results = get_results('yb-coresets')
 
     results = check_for_duplicates(results)
@@ -190,24 +208,16 @@ def main():
 
     fig, axs = plt.subplots(1, 3, sharex=True, sharey=True)
     fig.set_figheight(7.5 * 0.7)
-    fig.set_figwidth(6*3 * 0.7)
+    fig.set_figwidth(6 * 3 * 0.7)
 
     datasets = ['mr', 'ag-news', 'trec']
     for i in range(0, 3):
         plot_dataset(results, datasets[i], axs[i])
         axs[i].set_title(datasets[i], fontsize=20)
 
-    #plt.figlegend(
-    #    axs[0].get_lines(),
-    #    ['BERT / RS', 'SetFit / RS', 'BERT / BT', 'SetFit / BT', 'BERT / CS', 'SetFit / CS'],
-    #    loc='upper center',
-    #    prop={'size': 16},
-    #    ncols=3
-    #)
     from matplotlib.patches import Rectangle
 
     extra = Rectangle((0, 0), 1, 1, fc="w", fill=False, edgecolor='none', linewidth=0)
-    # print(axs[0].get_lines())
     lines = axs[0].get_lines()
 
     legend_handle = [
@@ -215,7 +225,7 @@ def main():
         lines[0], lines[1], extra,
         lines[2], lines[3], extra,
         lines[4], lines[5], extra,
-        extra, extra
+        lines[6], lines[7], extra, extra
     ]
 
     label_col_one = ['', 'BERT', 'SetFit']
@@ -225,21 +235,43 @@ def main():
     label_gc_tsne = ['CS-TSNE']
     label_empty = ['']
     legend_labels = np.concatenate(
-        [label_col_one, label_rs, label_empty * 2, label_bt, label_empty * 2, label_gc, label_empty * 2, label_gc_tsne, label_empty * 2]
+        [label_col_one, label_rs, label_empty * 2, label_bt, label_empty * 2, label_gc, label_empty * 2, label_gc_tsne,
+         label_empty * 2]
     )
     fig.legend(legend_handle, legend_labels,
-              loc='upper center', ncol=5, handletextpad=-2, prop={'size': 14})
-
-    # leg1 = plt.legend(axs[0].get_lines(), ['BERT / RS', 'SetFit / RS', 'BERT / BT', 'SetFit / BT', 'BERT / CS', 'SetFit / CS'])
-    # fig.add_artist(leg1)
-
-    # fig.legend(loc='upper left', ncols=3)
+               loc='upper center', ncol=5, handletextpad=-2, prop={'size': 14})
 
     fig.text(0.5, 0.1, 'Number of instances', ha='center', va='center', fontsize=20)
     fig.text(0.04, 0.45, 'Accuracy', ha='center', va='center', rotation='vertical', fontsize=20)
     plt.subplots_adjust(left=0.1, right=0.9, bottom=0.2, top=0.7)
     plt.savefig('plots.pdf')
-    plt.show()
+
+
+def plot_perplexities(dataset_name, num_iters):
+    perplexities = np.arange(5, 115, 10)
+    divergences = np.load(f'divergences-{dataset_name}-{num_iters}.npy')
+
+    i = np.argmin(divergences)
+    x_min = perplexities[i]
+    y_min = divergences[i]
+
+    print(x_min, y_min)
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(perplexities, divergences)
+    # plt.plot(x_min, y_min, marker='o')
+
+    # plt.text(x_min, y_min, f"({x_min}, {round(y_min, 3)})")
+
+    plt.xlabel('Perplexity', size=15)
+    plt.ylabel('KL-Divergence', size=15)
+
+    plt.savefig(f"perplexities-{dataset_name}-{num_iters}.pdf")
+
+
+def main():
+    # plot_all_datasets()
+    plot_perplexities('mr', num_iters=5000)
 
 
 if __name__ == '__main__':
