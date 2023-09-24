@@ -134,29 +134,37 @@ One such method is the Principal Components Analysis (PCA), which is one of the 
 
 These techniques can be powerful, however they often miss important non-linear structures in high-dimensional data. Therefore, non-linear techniques have been developed such as Isometric Mapping (Isomap) and t-distributed Stochastic Neighbor Embedding (t-SNE). The latter is a relatively modern probablistic approach that has improved upon many other non-linear techniques in creating a single map that reveals structure on many different scales. In addition, it manages to reduce the tendency of SNE to crowd data points together at the center by using a different cost function (\cite{van2008visualizing}). 
 
-First, it converts the high-dimensional Euclidean distances into conditional probabilities, such that similar data points are assigned higher probabilities and dissimilar data points are assigned very low probabilities. It then creates a similar probability distribution over the lower-dimensional map such that the Kullback-Leibler divergence (a measure of how one probability distribution differs from another) is minimized.
+First, it converts the high-dimensional Euclidean distances into conditional probabilities, such that similar data points are assigned higher probabilities and dissimilar data points are assigned very low probabilities. It then creates a similar probability distribution over the lower-dimensional map such that the \textit{Kullback-Leibler divergence} (a measure of how one probability distribution differs from another) is minimized.
 
 This method is especially useful for the visualization of high-dimensional data, in which the aim is to display and view the underlying structure in a given dataset. t-SNE plots are strongly influenced by the chosen hyperparameters however, and thus a good understanding for the influence of these parameters is important. Particularly \textit{perplexity}, a measure of the effective number of neighbours, has a complex effect on the resulting reductions. According to \cite{van2008visualizing}, typical values for perplexity are between 5 and 50 and larger/denser datasets often generally require higher perplexities (\cite{vanHomepage}). Other commonly adjusted parameters include the learning rate and number of iterations for the optimization.
 
-Tuning these parameters and exploring different reduction behaviours has been shown to often be necessary (\cite{wattenberg2016how}). Below, I have demonstrated the effect of t-SNE on a training set of the well-known Movie Review dataset (\cite{DBLP:conf/acl/PangL05}) containing 9,596 samples with a feature dimension of 768. Note that the samples have been embedded using BERT and normalized prior to the dimensionality reductions.
+\chapter{Approach}
 
-\iffalse
+As mentioned, distance-based methods such as Core-Set can be ineffective in higher dimensions. To overcome this challenge, I propose the application of t-SNE as a dimensionality reduction technique on the training data before employing the Greedy Core-Set strategy. In order to optimize my use of t-SNE, I will first examine the effects of different hyperparameters on the reductions. Based on these examinations, I will select the optimal t-SNE parameters to use for the experiment.
+
+As mentioned earlier, setting t-SNE's hyperparameters and exploring the resulting differing reduction behaviours has been shown to often be necessary (\cite{wattenberg2016how}). \cite{vanHomepage} mentions that examining the resulting plots is one of the best ways to assess the quality of the visualizations, in addition to comparing the Kullback-Leibler divergences. 
+
+Below, I have demonstrated the effect of t-SNE on a training set of the well-known Movie Review dataset (\cite{DBLP:conf/acl/PangL05}) containing 9,596 samples with a feature dimension of 768. The reductions are completed using perplexity values of 5, 30, 50 and 100 with iteration counts of 1,000 and 5,000 respectively. 
+
 \begin{figure}[htpb]
     \centering
-    \includegraphics[width=1\textwidth]{reductions-mr-1000.pdf}
+    \includegraphics[width=1\textwidth]{reductions-mr-1000.jpg}
     \caption{t-SNE reductions with various perplexity values after 1,000 iterations performed on the embedded and normalized Movie Review dataset.}
     \label{fig:reductions-mr-1000}
 \end{figure}
 
 \begin{figure}[htpb]
     \centering
-    \includegraphics[width=1\textwidth]{reductions-mr-5000.pdf}
+    \includegraphics[width=1\textwidth]{reductions-mr-5000.jpg}
     \caption{t-SNE reductions with various perplexity values after 5,000 iterations performed on the embedded and normalized Movie Review dataset.}
     \label{fig:reductions-mr-5000}
 \end{figure}
-\fi
 
-\chapter{Approach}
+Note that the samples have been embedded using BERT and normalized prior to the dimensionality reductions. \\
+
+Starting at a perplexity of 30, the points begin to cluster more and more tightly. The clusters do not seem to separate in any of the runs -- it is important to note, however, that distances and sizes of the clusters do necessarily carry any meaning when examining the plots (\cite{wattenberg2016how}, \cite{vanHomepage}).
+
+It is also worth noting that the differences between 1,000 and 5,000 iterations appear quite small despite the relative increase in computations.
 
 \chapter{Experiment}
 
