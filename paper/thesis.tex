@@ -16,8 +16,8 @@
 %
 % Values
 % ------
-\ThesisSetTitle{The Title of the Thesis}
-\ThesisSetKeywords{These, are, my, Keywords} % only for PDF meta attributes
+\ThesisSetTitle{Active Learning for Text Classification using Dimensionality Reduction for Core-Set}
+\ThesisSetKeywords{Active Learning, Text Classification, Dimensionality Reduction, Core-Set, t-SNE} % only for PDF meta attributes
 \ThesisSetLocation{Leipzig} 
 
 \ThesisSetAuthor{Yannick Brenning}
@@ -118,13 +118,19 @@ One of the most common applications of text classification is determining whethe
 Beyond that, many applications of text classification require multiple classes, such as news and content categorization. In this case, text classification algorithms can organize documents into specific topics or themes (e.g. Sports, Business, Politics, \dots) (\cite{DBLP:journals/csur/Sebastiani02}). Other applications include information retrieval, recommender systems, and document summarization (\cite{DBLP:journals/information/KowsariMHMBB19}).
 
 % **PROCESS**
-Generally, text classification methods can be divided into the following phases: data collection and preprocessing, feature extraction, classifier selection, and model evaluation (\cite{DBLP:journals/information/KowsariMHMBB19}, \cite{DBLP:journals/eswa/MironczukP18}, \cite{ikonomakis2005text}).
+Generally, text classification methods can be divided into the following phases: data collection and preprocessing, feature extraction, classifier selection, and model evaluation (\cite{DBLP:journals/information/KowsariMHMBB19}, \cite{DBLP:journals/eswa/MironczukP18}, \cite{ikonomakis2005text}). \dots
 
 % **CHALLENGES(?)**
 
 \section{Active Learning}
 
+Active Learning has become an increasingly important field when considering the need for efficient models as well as the labelling bottleneck in various machine learning tasks. Many fields, such as speech recognition, information extraction and classification suffer from this bottleneck as a result of their instance labels being expensive or time-consuming to obtain (\cite{settles.tr09}). \dots
+
 \section{Core-Set}
+
+The Core-Set approach as proposed in \cite{DBLP:conf/iclr/SenerS18} was originally designed for convolutional neural networks (CNNs) to tackle the problem of AL algorithms on large datasets. The empirical studies conducted by \cite{DBLP:conf/iclr/SenerS18} show that Core-Set outperforms other approaches within the field of image classification.
+
+The task of active learning is defined as a \textit{core-set selection} problem in which the algorithm selects a smaller subset of points with increased diversity to learn from such that the model can be competitive over a larger dataset. This problem ends up being equivalent to the \textit{k-Center} problem (\cite{DBLP:conf/iclr/SenerS18}), which is also referred to as the min-max facility location problem. In practice, Core-Set solves the k-Center problem with a greedy approach and improves upon its robustness by placing an upper limit on the number of outliers. \dots
 
 \section{Dimensionality Reduction}
 
@@ -140,40 +146,7 @@ This method is especially useful for the visualization of high-dimensional data,
 
 \chapter{Approach}
 
-As mentioned, distance-based methods such as Core-Set can be ineffective in higher dimensions. To overcome this challenge, I propose the application of t-SNE as a dimensionality reduction technique on the training data before employing the Greedy Core-Set strategy. In order to optimize my use of t-SNE, I will first examine the effects of different hyperparameters on the reductions. Based on these examinations, I will select the optimal t-SNE parameters to use for the experiment.
-
-As mentioned earlier, setting t-SNE's hyperparameters and exploring the resulting differing reduction behaviours has been shown to often be necessary (\cite{wattenberg2016how}). \cite{vanHomepage} mentions that examining the resulting plots is one of the best ways to assess the quality of the visualizations, in addition to comparing the Kullback-Leibler divergences. 
-
-Below, I have demonstrated the effect of t-SNE on a training set of the well-known Movie Review dataset (\cite{DBLP:conf/acl/PangL05}) containing 9,596 samples with a feature dimension of 768. The reductions are completed using perplexity values of 5, 30, 50 and 100 with iteration counts of 1,000 and 5,000 respectively. 
-
-\begin{figure}[htpb]
-    \centering
-    \includegraphics[width=1\textwidth]{img/reductions-mr-1000.jpg}
-    \caption{t-SNE reductions with various perplexity values after 1,000 iterations performed on the embedded and normalized Movie Review dataset.}
-    \label{fig:reductions-mr-1000}
-\end{figure}
-
-\begin{figure}[htpb]
-    \centering
-    \includegraphics[width=1\textwidth]{img/reductions-mr-5000.jpg}
-    \caption{t-SNE reductions with various perplexity values after 5,000 iterations performed on the embedded and normalized Movie Review dataset.}
-    \label{fig:reductions-mr-5000}
-\end{figure}
-
-Note that the samples have been embedded using BERT and normalized prior to the dimensionality reductions. \\
-
-Starting at a perplexity of 30, the points begin to cluster more and more tightly. The clusters do not seem to separate in any of the runs -- it is important to note, however, that distances and sizes of the clusters do necessarily carry any meaning when examining the plots (\cite{wattenberg2016how}, \cite{vanHomepage}).
-
-It is also worth noting that the differences between 1,000 and 5,000 iterations appear quite small despite the relative increase in computations. 
-
-\dots
-
-\begin{figure}[htpb]
-    \centering
-    \includegraphics[width=1\textwidth]{img/reductions-ag-news-1000.jpg}
-    \caption{t-SNE reductions with various perplexity values after 1,000 iterations performed on the embedded and normalized AG's News dataset.}
-    \label{fig:reductions-agnews-1000}
-\end{figure}
+As mentioned, distance-based methods such as Core-Set can be ineffective in higher dimensions. To overcome this challenge, I propose the application of t-SNE as a dimensionality reduction technique on the training data before employing the Greedy Core-Set strategy. In order to optimize my use of t-SNE, I will first examine the effects of different hyperparameters on the reductions. Based on these examinations, I will select the optimal t-SNE parameters to use for the experiment. The experiment itself will be conducted with two models on three well-known classification datasets and will measure the performances throughout 5 runs per combination. I will compare the \dots
 
 \chapter{Experiment}
 
@@ -181,18 +154,53 @@ It is also worth noting that the differences between 1,000 and 5,000 iterations 
 
 This experiment was conducted across three datasets commonly used in the field of AL. These datasets are of three different types: sentiment analysis (S), questions (Q), and news (N). For binary classification, I used \textbf{Movie Review}, a sentiment analysis dataset (\cite{DBLP:conf/acl/PangL05}) containing 5,331 positive and 5,331 negative samples. For multi-class text classification, \textbf{AG's News} (\cite{DBLP:conf/nips/ZhangZL15}), comprised of 120,000 training samples and 7,600 test samples, and \textbf{TREC} (\cite{DBLP:journals/nle/LiR06}), a question dataset containing 5,500 training samples and 500 test samples.
 
-The test set was only provided in the case of AG's News and TREC, in the case of Movie Review I employed a split of the 10,662 samples myself. 
+The test set was only provided in the case of AG's News and TREC, in the case of Movie Review I employed a split of the 10,662 samples myself. \dots
 
 % The chosen datasets are Movie Review (MR), a sentiment analysis dataset with 10662 data points, TREC-6, a question dataset with {} data points, and finally AG-News, a topic dataset with 120,000 data points. Each of these datasets is commonly used in the field of AL. One must note that these are comparatively few data points, due to the fact that AL is a time and resource-expensive field.
 
 \section{Experiment Setup}
 
+As mentioned earlier, setting t-SNE's hyperparameters and exploring the resulting differing reduction behaviours has been shown to often be necessary (\cite{wattenberg2016how}). \cite{vanHomepage} mentions that examining the resulting plots is one of the best ways to assess the quality of the visualizations, in addition to comparing the Kullback-Leibler divergences. 
+
+Below, I have demonstrated the effect of t-SNE on a training set of the MR dataset (\cite{DBLP:conf/acl/PangL05}) containing 9,596 samples with a feature dimension of 768. The reductions are completed using perplexity values of 5, 30, 50 and 100 with iteration counts of 1,000 and 5,000 respectively. Note that the samples have been embedded using BERT and then normalized prior to the dimensionality reductions.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{img/reductions-mr-1000.jpg}
+    \caption{t-SNE reductions with various perplexity values after 1,000 iterations performed on the embedded and normalized Movie Review dataset.}
+    \label{fig:reductions-mr-1000}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{img/reductions-mr-5000.jpg}
+    \caption{t-SNE reductions with various perplexity values after 5,000 iterations performed on the embedded and normalized Movie Review dataset.}
+    \label{fig:reductions-mr-5000}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{img/reductions-ag-news-1000.jpg}
+    \caption{t-SNE reductions with various perplexity values after 1,000 iterations performed on the embedded and normalized AG's News dataset.}
+    \label{fig:reductions-agnews-1000}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{img/reductions-trec-1000.jpg}
+    \caption{t-SNE reductions with various perplexity values after 1,000 iterations performed on the embedded and normalized TREC-6 dataset.}
+    \label{fig:reductions-trec-1000}
+\end{figure}
+
+Starting at a perplexity of 30, the points begin to cluster more and more tightly. The clusters do not seem to separate in any of the runs -- it is important to note, however, that distances and sizes of the clusters do necessarily carry any meaning when examining the reduction plots (\cite{wattenberg2016how}, \cite{vanHomepage}).
+
+It is also worth noting that the differences between 1,000 and 5,000 iterations appear quite small despite the relative increase in computations. \dots
 
 \section{Experiment Results}
 
 \iffalse
 %% TEMPLATE TABLE
-\begin{table*}[!t]%
+\begin{table*}[h!]%
 \centering
 \fontsize{8pt}{9pt}\selectfont%
 \renewcommand{\tabcolsep}{12pt}%
@@ -218,7 +226,7 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \fi
 
 % MY ACC TABLE
-\begin{table*}[!t]%
+\begin{table*}[h!]%
 \centering
 \fontsize{8pt}{9pt}\selectfont%
 \renewcommand{\tabcolsep}{12pt}%
@@ -247,7 +255,6 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 Final accuracy per dataset, model, and query strategy. We report the mean and standard deviation over five runs. The best result per dataset is printed in bold.}
 \label{table-results-acc}
 \end{table*}
-
 
 % MY AUC TABLE
 \begin{table*}[!t]%
@@ -281,7 +288,11 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 
 \chapter{Discussion}
 
+\dots
+
 \chapter{Conclusion}
+
+\dots
 
 % \chapter*{Acknowledgements} % optional
 % I thank the authors of the webisthesis template for their excellent work!
