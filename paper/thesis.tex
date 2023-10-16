@@ -146,7 +146,13 @@ This method is especially useful for the visualization of high-dimensional data,
 
 \chapter{Approach}
 
-As mentioned, distance-based methods such as Core-Set can be ineffective in higher dimensions. To overcome this challenge, I propose the application of t-SNE as a dimensionality reduction technique on the training data before employing the Greedy Core-Set strategy. In order to optimize my use of t-SNE, I will first examine the effects of different hyperparameters on the reductions. Based on these examinations, I will select the optimal t-SNE parameters to use for the experiment. The experiment itself will be conducted with two models on three well-known classification datasets and will measure the performances throughout 5 runs per combination. I will compare the \dots
+As mentioned, distance-based methods such as Core-Set can be ineffective in higher dimensions. To overcome this challenge, I propose the application of t-SNE as a dimensionality reduction technique on the training data before employing the Greedy Core-Set strategy. In order to optimize my use of t-SNE, I will first examine the effects of different hyperparameters on the reductions. Based on these examinations, I will select the optimal t-SNE parameters to use for the experiment. 
+
+Next, I will examine the effect of pointwise probabilities on the Core-Set algorithm. Core-Set currently operates using the distances between these points -- in this experiment, I propose an approach where Core-Set considers the probability distributions in addition to the distances. These probabilities will be multiplied as a weight vector with the distances. 
+
+The experiment will be conducted with two models on three well-known classification datasets and will measure the performances throughout 5 runs per combination. I have chosen two state-of-the-art transformers, BERT (\cite{DBLP:conf/naacl/DevlinCLT19}) and SetFit (\cite{DBLP:setfit}) as models for this experiment.
+
+
 
 \chapter{Experiment}
 
@@ -236,18 +242,18 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \cmidrule{3-10} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE}\\
 \midrule
 
-\multirow{2}{*}{AGN}  & BERT & 0.78 & 0.171 & \bfseries 0.79 & \bfseries 0.161 & 0.727 & 0.175 & 0.782 & 0.166\\ 
- & SetFit & 0.862 & 0.044 & \bfseries 0.877 & \bfseries 0.048 & 0.868 & 0.052 & 0.871 & 0.047 \\
+\multirow{2}{*}{AGN}  & BERT & 0.884 & 0.004 & 0.889 & 0.01 & \bfseries 0.874 & \bfseries 0.012 & 0.881 & 0.01\\ 
+ & SetFit & 0.886 & 0.006 & \bfseries 0.902 & \bfseries 0.004 & 0.895 & 0.003 & 0.895 & 0.003 \\
 
 \midrule
 
-\multirow{2}{*}{MR}  & BERT & 0.747 & 0.089 & 0.743 & 0.091 & 0.715 & 0.097 & \bfseries 0.749 & \bfseries 0.085\\ 
- & SetFit & 0.853 & 0.015 & \bfseries 0.863 & \bfseries 0.019 & 0.856 & 0.018 & 0.861 & 0.016 \\
+\multirow{2}{*}{MR}  & BERT & 0.806 & 0.011 & 0.815 & 0.009 & \bfseries 0.77 & \bfseries 0.015 & 0.815 & 0.01\\ 
+ & SetFit & 0.869 & 0.006 & \bfseries 0.88 & \bfseries 0.005 & 0.871 & 0.005 & 0.874 & 0.005 \\
 
 \midrule
 
-\multirow{2}{*}{TREC}  & BERT & 0.668 & 0.251 & \bfseries 0.702 & \bfseries 0.246 & 0.592 & 0.256 & 0.671 & 0.251\\ 
- & SetFit & 0.907 & 0.076 & \bfseries 0.916 & \bfseries 0.093 & 0.89 & 0.111 & 0.913 & 0.087 \\
+\multirow{2}{*}{TREC}  & BERT & 0.904 & 0.018 & 0.92 & 0.014 & \bfseries 0.902 & \bfseries 0.021 & 0.912 & 0.009\\ 
+ & SetFit & 0.945 & 0.004 & \bfseries 0.954 & \bfseries 0.006 & 0.962 & 0.004 & 0.957 & 0.007 \\
  
 \bottomrule
 \end{tabular}
@@ -283,7 +289,7 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \bottomrule
 \end{tabular}
 \caption{Final AUC per dataset, model, and query strategy. We report the mean and standard deviation over five runs. The best result per dataset is printed in bold.}
-\label{table-results-acc}
+\label{table-results-auc}
 \end{table*}
 
 \chapter{Discussion}
