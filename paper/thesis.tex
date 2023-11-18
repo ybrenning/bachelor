@@ -150,6 +150,8 @@ As mentioned, distance-based methods such as Core-Set can be ineffective in high
 
 Next, I will examine the effect of pointwise probabilities on the Core-Set algorithm. Core-Set currently operates using the distances between these points -- in this experiment, I propose an approach where Core-Set considers the probability distributions in addition to the distances. These probabilities will be multiplied as a weight vector with the distances. 
 
+Finally, I will take into account the class distributions within each Core-Set and select points based on the representation of each class.
+
 The experiment will be conducted with two models on three well-known classification datasets and will measure the performances throughout 5 runs per combination. I have chosen two state-of-the-art transformers, BERT (\cite{DBLP:conf/naacl/DevlinCLT19}) and SetFit (\cite{DBLP:setfit}) as models for this experiment.
 
 
