@@ -148,13 +148,13 @@ This method is especially useful for the visualization of high-dimensional data,
 
 As mentioned, distance-based methods such as Core-Set can be ineffective in higher dimensions. To overcome this challenge, I propose the application of t-SNE as a dimensionality reduction technique on the training data before employing the Greedy Core-Set strategy. In order to optimize my use of t-SNE, I will first examine the effects of different hyperparameters on the reductions. Based on these examinations, I will select the optimal t-SNE parameters to use for the experiment. 
 
-Next, I will examine the effect of pointwise probabilities on the Core-Set algorithm. Core-Set currently operates using the distances between these points -- in this experiment, I propose an approach where Core-Set considers the probability distributions in addition to the distances. These probabilities will be multiplied as a weight vector with the distances. 
+Next, I will examine the effect of pointwise probabilities on the Core-Set algorithm. Core-Set currently operates using the distances between its points -- in this experiment, I propose an approach where Core-Set considers the probability distributions in addition to the distances. 
+
+To accomplish this, I will be using an uncertainty-based approach. Uncertainty sampling, which was introduced by \cite{DBLP:conf/sigir/LewisG94}, essentially attempts to select the unlabelled examples with the lowest classification certainty. In this case, I opted for an approach similar to that of Breaking-Ties (\cite{DBLP:journals/jmlr/LuoKGHSRH05}), where the instances with the smallest margin between their top two most likely classification probabilities are selected, essentially "breaking the tie" between the two most likely classes. The results of this calculation will then be multiplied as a weight vector with the distances normally used by Core-Set.
 
 Finally, I will take into account the class distributions within each Core-Set and select points based on the representation of each class.
 
 The experiment will be conducted with two models on three well-known classification datasets and will measure the performances throughout 5 runs per combination. I have chosen two state-of-the-art transformers, BERT (\cite{DBLP:conf/naacl/DevlinCLT19}) and SetFit (\cite{DBLP:setfit}) as models for this experiment.
-
-
 
 \chapter{Experiment}
 
@@ -172,6 +172,7 @@ As mentioned earlier, setting t-SNE's hyperparameters and exploring the resultin
 
 Below, I have demonstrated the effect of t-SNE on a training set of the MR dataset (\cite{DBLP:conf/acl/PangL05}) containing 9,596 samples with a feature dimension of 768. The reductions are completed using perplexity values of 5, 30, 50 and 100 with iteration counts of 1,000 and 5,000 respectively. Note that the samples have been embedded using BERT and then normalized prior to the dimensionality reductions.
 
+\iffalse
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=1\textwidth]{img/reductions-mr-1000.jpg}
@@ -199,6 +200,8 @@ Below, I have demonstrated the effect of t-SNE on a training set of the MR datas
     \caption{t-SNE reductions with various perplexity values after 1,000 iterations performed on the embedded and normalized TREC-6 dataset.}
     \label{fig:reductions-trec-1000}
 \end{figure}
+
+\fi
 
 Starting at a perplexity of 30, the points begin to cluster more and more tightly. The clusters do not seem to separate in any of the runs -- it is important to note, however, that distances and sizes of the clusters do necessarily carry any meaning when examining the reduction plots (\cite{wattenberg2016how}, \cite{vanHomepage}).
 
@@ -237,25 +240,25 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \begin{table*}[h!]%
 \centering
 \fontsize{8pt}{9pt}\selectfont%
-\renewcommand{\tabcolsep}{12pt}%
-\begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
+\renewcommand{\tabcolsep}{4pt}%
+\begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
 \toprule
 \textbf{Dataset} & \textbf{Model} & \multicolumn{8}{c}{\textbf{Query Strategy}}\\
-\cmidrule{3-10} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE}\\
+\cmidrule{3-10} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE} & \multicolumn{2}{c}{\hspace*{4pt}WCS} & \multicolumn{2}{c}{\hspace*{4pt}RWCS}\\
 \midrule
 
-\multirow{2}{*}{AGN}  & BERT & 0.884 & 0.004 & 0.889 & 0.01 & \bfseries 0.874 & \bfseries 0.012 & 0.881 & 0.01\\ 
- & SetFit & 0.886 & 0.006 & \bfseries 0.902 & \bfseries 0.004 & 0.895 & 0.003 & 0.895 & 0.003 \\
+\multirow{2}{*}{AGN}  & BERT & 0.884 & 0.004 & \bfseries 0.889 & \bfseries 0.01 &  0.874 & 0.012 & 0.881 & 0.01 & 0.873 & 0.011 & 0.873 & 0.022\\ 
+ & SetFit & 0.886 & 0.006 & 0.902 & 0.004 & 0.895 & 0.003 & 0.895 & 0.003 & 0.895 & 0.005 & \bfseries 0.908 & \bfseries 0.002 \\
+ 
+\midrule
+ 
+\multirow{2}{*}{MR}  & BERT & 0.806 & 0.011 & 0.815 & 0.009 & 0.77 & 0.015 & 0.796 & 0.02 & 0.806 & 0.014 & \bfseries 0.817 & \bfseries 0.01\\ 
+ & SetFit & 0.869 & 0.006 & 0.88 & 0.005 & 0.871 & 0.005 & 0.874 & 0.005 & 0.874 & 0.007 & \bfseries 0.884 & \bfseries 0.005 \\
 
 \midrule
 
-\multirow{2}{*}{MR}  & BERT & 0.806 & 0.011 & 0.815 & 0.009 & \bfseries 0.77 & \bfseries 0.015 & 0.815 & 0.01\\ 
- & SetFit & 0.869 & 0.006 & \bfseries 0.88 & \bfseries 0.005 & 0.871 & 0.005 & 0.874 & 0.005 \\
-
-\midrule
-
-\multirow{2}{*}{TREC}  & BERT & 0.904 & 0.018 & 0.92 & 0.014 & \bfseries 0.902 & \bfseries 0.021 & 0.912 & 0.009\\ 
- & SetFit & 0.945 & 0.004 & \bfseries 0.954 & \bfseries 0.006 & 0.962 & 0.004 & 0.957 & 0.007 \\
+\multirow{2}{*}{TREC}  & BERT & 0.904 & 0.018 & 0.92 & 0.014 &  0.902 & 0.021 & 0.912 & 0.009 & 0.897 & 0.027 & \bfseries 0.951 & \bfseries 0.008\\ 
+ & SetFit & 0.945 & 0.004 & 0.954 & 0.006 & 0.962 & 0.004 & 0.957 & 0.007 & 0.966 & 0.004 & \bfseries 0.972 & \bfseries 0.003 \\
  
 \bottomrule
 \end{tabular}
@@ -268,31 +271,33 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \begin{table*}[!t]%
 \centering
 \fontsize{8pt}{9pt}\selectfont%
-\renewcommand{\tabcolsep}{12pt}%
-\begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
+\renewcommand{\tabcolsep}{4pt}%
+\begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
 \toprule
 \textbf{Dataset} & \textbf{Model} & \multicolumn{8}{c}{\textbf{Query Strategy}}\\
-\cmidrule{3-10} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE}\\
+\cmidrule{3-10} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE} & \multicolumn{2}{c}{\hspace*{4pt}WCS} & \multicolumn{2}{c}{\hspace*{4pt}RWCS}\\
 \midrule
 
-\multirow{2}{*}{AGN}  & BERT & 0.79 & 0.015 & \bfseries 0.8 & \bfseries 0.009 & 0.735 & 0.02 & 0.792 & 0.007\\ 
- & SetFit & 0.865 & 0.007 & \bfseries 0.881 & \bfseries 0.004 & 0.871 & 0.005 & 0.875 & 0.004 \\
-
-\midrule
-
-\multirow{2}{*}{MR}  & BERT & 0.75 & 0.007 & 0.746 & 0.011 & 0.718 & 0.009 & \bfseries 0.752 & \bfseries 0.016\\ 
- & SetFit & 0.854 & 0.002 & \bfseries 0.864 & \bfseries 0.005 & 0.856 & 0.003 & 0.862 & 0.003 \\
+\multirow{2}{*}{AGN}  & BERT & 0.79 & 0.015 & 0.8 & 0.009 & 0.735 & 0.02 & 0.792 & 0.007 & 0.731 & 0.014 & \bfseries 0.805 & \bfseries 0.01\\ 
+ & SetFit & 0.865 & 0.007 & 0.881 & 0.004 & 0.871 & 0.005 & 0.875 & 0.004 & 0.87 & 0.003 & \bfseries 0.884 & \bfseries 0.002 \\
 
 \midrule
 
-\multirow{2}{*}{TREC}  & BERT & 0.674 & 0.029 & \bfseries 0.709 & \bfseries 0.008 & 0.594 & 0.022 & 0.676 & 0.037\\ 
- & SetFit & 0.914 & 0.011 & \bfseries 0.923 & \bfseries 0.007 & 0.896 & 0.015 & 0.919 & 0.005 \\
+\multirow{2}{*}{MR}  & BERT & 0.75 & 0.007 & 0.746 & 0.011 & 0.718 & 0.009 & 0.741 & 0.017 & 0.72 & 0.004 & \bfseries 0.759 & \bfseries 0.007\\ 
+ & SetFit & 0.854 & 0.002 & 0.864 & 0.005 & 0.856 & 0.003 & 0.862 & 0.003 & 0.858 & 0.007 & \bfseries 0.866 & \bfseries 0.003 \\
+
+\midrule
+
+\multirow{2}{*}{TREC}  & BERT & 0.674 & 0.029 & 0.709 & 0.008 & 0.594 & 0.022 & 0.676 & 0.037 & 0.629 & 0.024 & \bfseries 0.771 & \bfseries 0.021\\ 
+ & SetFit & 0.914 & 0.011 & \bfseries 0.923 & \bfseries 0.007 & 0.896 & 0.015 & 0.919 & 0.005 & 0.893 & 0.012 & 0.918 & 0.015 \\
  
 \bottomrule
 \end{tabular}
 \caption{Final AUC per dataset, model, and query strategy. We report the mean and standard deviation over five runs. The best result per dataset is printed in bold.}
 \label{table-results-auc}
 \end{table*}
+
+The results show small improvements in accuracy in the dimensionality reduction approach, as well as the first iteration of the Weighted Core-Set. However, the Ranked-Weighted Core-Set approach achieves the highest accuracy in almost all instances, being outperformed only on the AG-News dataset with BERT by the Breaking-Ties strategy. The AUC results are similar, with RWCS shows the best results in almost all cases. The accuracy and AUC improvements are most drastic in the case of BERT on the TREC dataset, where RWCS achieves an improvement in mean accuracy of 4.9 percent, and an improvement in AUC of 17.7 percent.
 
 \chapter{Discussion}
 
