@@ -211,6 +211,8 @@ Starting at a perplexity of 30, the points begin to cluster more and more tightl
 
 It is also worth noting that the differences between 1,000 and 5,000 iterations appear quite small despite the relative increase in computations. \dots
 
+The experiment is conducted using 20 queries on 25 instances, with a validation set size of 10\%. The experiment is averaged over five runs of queries per combination of dataset, model and query strategy. 
+
 \section{Experiment Results}
 
 The following figures show the learning curves for each combination of dataset, model and query strategy. 
@@ -317,7 +319,13 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \label{table-results-auc}
 \end{table*}
 
-The results show small improvements in accuracy in the dimensionality reduction approach, as well as the first iteration of the Weighted Core-Set. However, the Ranked-Weighted Core-Set approach achieves the highest accuracy in almost all instances, being outperformed only on the AG-News dataset with BERT by the Breaking-Ties strategy. The AUC results are similar, with RWCS shows the best results in almost all cases. The accuracy and AUC improvements are most drastic in the case of BERT on the TREC dataset, where RWCS achieves an improvement in mean accuracy of 4.9 percent, and an improvement in AUC of 17.7 percent.
+The SetFit learning curves generally outperform the BERT model and seem to show much less variation between the different query strategies. When looking at the query strategies, we can see that specifically in the case of BERT, Core-Set seems to underperform especially in earlier iterations, even when compared to RS. This further reinforces the sentiment that Core-Set has its weaknesses when considering the task of text classification. We can see that in most cases, the three variations of Core-Set seem to be on par with or more performant than the original Core-Set. Even so, BT looks to be a strong contender in all cases and manages to perform similarly or better than CS-TSNE and WCS. The largest difference can be seen on the TREC-6 dataset, with RWCS outperforming all other strategies.
+
+In \ref{table-results-acc}, I show the reported mean accuracy and standard deviation for each combination of dataset, model and query strategy. The results show small improvements in accuracy for the dimensionality reduction approach, as well as Weighted Core-Set. However, the Ranked-Weighted Core-Set approach achieves the highest accuracy in almost all instances, being outperformed only on the AG-News dataset with BERT by the Breaking-Ties strategy.
+
+\ref{table-results-auc} contains the reported mean AUC (area under curve) and standard deviation for each combination of dataset, model and query strategy. The top performing AUC results, similarly to the accuracy table, show RWCS as having the best results in almost all cases. 
+
+As also made evident by the learning curves earlier, the accuracy and AUC improvements are most drastic in the case of BERT on the TREC dataset, where RWCS achieves an improvement in Core-Set's mean accuracy of 4.9 percent, and an improvement in AUC of 17.7 percent.
 
 \chapter{Discussion}
 
