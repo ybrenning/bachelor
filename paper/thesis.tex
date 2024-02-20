@@ -118,13 +118,33 @@ One of the most common applications of text classification is determining whethe
 Beyond that, many applications of text classification require multiple classes, such as news and content categorization. In this case, text classification algorithms can organize documents into specific topics or themes (e.g. Sports, Business, Politics, \dots) (\cite{DBLP:journals/csur/Sebastiani02}). Other applications include information retrieval, recommender systems, and document summarization (\cite{DBLP:journals/information/KowsariMHMBB19}).
 
 % **PROCESS**
-Generally, text classification methods can be divided into the following phases: data collection and preprocessing, feature extraction, classifier selection, and model evaluation (\cite{DBLP:journals/information/KowsariMHMBB19}, \cite{DBLP:journals/eswa/MironczukP18}, \cite{ikonomakis2005text}). \dots
+Generally, text classification methods can be divided into the following phases: data collection and preprocessing, feature extraction, classifier selection, and model evaluation (\cite{DBLP:journals/information/KowsariMHMBB19}, \cite{DBLP:journals/eswa/MironczukP18}, \cite{ikonomakis2005text}).
+
+In the first stage, some form of text data necessary to complete some classification objective is acquired, ideally of a sufficient amount. There are several open data sets that are publicly available for this stage. The preprocessing phase includes steps such as lemmatization, removal of stop words, tokenization and stemming. 
+
+The preprocessed text data must them be converted into numerical feature vectors. There are a number of techniques for accomplishing this such as Bag-of-Words, TF-IDF (Term Frequency-Inverse Document Frequency), and word embedding methods such as Word2Vec or GloVe. In addition to the methods just mentioned which are known as static word embeddings, there exist context-sensitive methods as of the late-2010s such as BERT and ELMo (\cite{DBLP:conf/naacl/DevlinCLT19}, \cite{DBLP:conf/naacl/PetersNIGCLZ18}), which can better represent the varied senses encompassed by words depending on their contexts.
+
+The next phase, classifier selection, is one of the most crucial steps in the text classification pipeline. Without a comprehensive grasp of the underlying concepts of each algorithm, we cannot effectively determine an appropriate model for the task. Commonly known algorithms include Logistic Regression, Naive Bayes and Support Vector Machines. More recently deep learning models such as Convolutional Neural Networks (CNNs), Recurrent Neural Networks (RNNs) and Transformer Models have become established as state-of-the-art approaches, especially when considering large text classification tasks. These different deep learning algorithms are increasingly popular due to their ability to model more complex and non-linear relationships within data (\cite{DBLP:journals/nature/LeCunBH15}). The Core-Set approach was also originally developed for the deep learning domain, more specifically CNNs. As a result, this thesis will also be focusing on the use of deep learning models, specifically transformers.
+
+Model evaluation is usually the "final" phase of the text classification process. This encompassees the assessment of the classifier's performance, for which a myriad of metrics such as accuracy, F1-score and AUC can be employed. Based on the evaluation, one can select a suitable model/strategy as well as attempt to optimize it.
+
+The process of text classification clearly includes many steps which can be optimized and examined. Due to this, going over the entire process in detail would exceed the scope of this thesis. With this in mind, this thesis' experiment does not focus on the initial steps such as data collection, preprocessing and feature extraction, but rather the model training and evaluation steps.
 
 % **CHALLENGES(?)**
 
 \section{Active Learning}
 
-Active Learning has become an increasingly important field when considering the need for efficient models as well as the labelling bottleneck in various machine learning tasks. Many fields, such as speech recognition, information extraction and classification suffer from this bottleneck as a result of their instance labels being expensive or time-consuming to obtain (\cite{settles.tr09}). \dots
+Active Learning has become an increasingly important field when considering the need for efficient models as well as the labelling bottleneck in various machine learning tasks. Many fields, such as speech recognition, information extraction and classification suffer from this bottleneck as a result of their instance labels being expensive or time-consuming to obtain (\cite{settles.tr09}). 
+
+Generally, active learning takes place in one of three main scenarios, namely \textit{membership query synthesis}, \textit{stream-based selective sampling} and \textit{pool-based active learning}. 
+
+In the case of membership query synthesis, a membership query is created in the form of some unlabelled instance from the original dataset (\cite{DBLP:journals/ml/Angluin87},\cite{DBLP:journals/ijon/WangHYL15}). In other words, this approach synthesizes a query de novo, rather than selecting some query from the instance space. One challenge of this approach is ensuring that the synthesized query is consistent with meeting the constraints imposed by the real data. In the case of a human oracle, this can result in unrecognizable queries, for example in the case of computer vision tasks. Similarly, this issue could also apply to text classification, where the query synthesis produces unintelligible texts (\cite{langbaum92}, \cite{settles.tr09}).% TODO: Can I cite two papers for "essentially" the same definition (first one is the original paper, second one's explanation seemed more clear)
+
+Stream-based selective sampling, on the other hand, typically examines each unlabelled instance one at a time and decides whether to query the oracle or to assign a label (\cite{settles.tr09}).
+
+Finally, we consider the pool-based approach as one of the commonly known applications of AL. This scenario assumes a large set of unlabelled instances and a small set of labelled instaces, from which queries can be selectively drawn using a \textit{query strategy}. This can be useful in many real-world problems where plenty of unlabelled data is available and the pool is assumed to be closed (though this is not necessarily always the case) (\cite{settles.tr09}).
+
+This thesis considers the case of the pool-based scenario, as does the original Core-Set paper. It is worth mentioning however, that Core-Set has also been applied in the stream-based context (\cite{DBLP:conf/icml/SaranYK0A23}).
 
 \section{Core-Set}
 
