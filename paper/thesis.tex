@@ -130,7 +130,11 @@ Active Learning has become an increasingly important field when considering the 
 
 The Core-Set approach as proposed in \cite{DBLP:conf/iclr/SenerS18} was originally designed for convolutional neural networks (CNNs) to tackle the problem of AL algorithms on large datasets. The empirical studies conducted by \cite{DBLP:conf/iclr/SenerS18} show that Core-Set outperforms other approaches within the field of image classification.
 
-The task of active learning is defined as a \textit{core-set selection} problem in which the algorithm selects a smaller subset of points with increased diversity to learn from such that the model can be competitive over a larger dataset. This problem ends up being equivalent to the \textit{k-Center} problem (\cite{DBLP:conf/iclr/SenerS18}), which is also referred to as the min-max facility location problem. In practice, Core-Set solves the k-Center problem with a greedy approach and improves upon its robustness by placing an upper limit on the number of outliers. \dots
+The task of active learning is defined as a \textit{core-set selection} problem in which the algorithm selects a smaller subset of points with increased diversity to learn from such that the model can be competitive over a larger dataset. This problem ends up being equivalent to the \textit{k-Center} problem (\cite{DBLP:conf/iclr/SenerS18}), which is also referred to as the minimax facility location problem. 
+
+In mathemetical terms, given a set of points $ N $ and a budget $ k \leq |N| $, k-Center finds a subset $ \mathbf{s} \subseteq N $ of $ k $ points such that the minimum distance of any point in $ N \setminus \mathbf{s} $ to its closest center in $ \mathbf{s} $ is maximal. Another way of viewing this problem is by placing circles around the points in our set of centers. If we denote the maximum distance of any point in $ N $ to its nearest center in $ \mathbf{s} $ with $ \delta_{\mathbf{s}} $ and we place circles with a $ \delta_{\mathbf{s}} $-radius around each center in $ \mathbf{s} $, we can "cover" the entire set of points $ N $. In other words, k-Center attempts to find the minimum $ \delta_{\mathbf{s}} $ such that all points lie within the union of the $ \delta_{\mathbf{s}} $-circles when placed upon each center. This problem has been shown to be NP-hard (\cite{DBLP:journals/dam/HsuN79}, \cite{DBLP:journals/anor/Hochbaum84}). As a result, Core-Set uses a greedy approach to solve the Core-Set problem. However, it is worth noting that approximations of the algorithm are bound by twice the optimal solution (\cite{DBLP:journals/dam/HsuN79}). 
+
+Let $ OPT $ denote the maximum distance of a center to a point in the optimal solution to k-Center. Then k-Center greedy's resulting maximum distance $ \delta_{\mathbf{s}} $ to any center in $ \mathbf{s} $ is at the worst $ 2 \cdot OPT $. The original paper by Sener and Saverese attempts to further improve the robustness of this approximation by placing an upper limit on the number of outliers that can be selected. This thesis will be focusing on and using the regular k-Center greedy algorithm for ease of implementation and interpretability. (?)
 
 \section{Dimensionality Reduction}
 
@@ -266,15 +270,15 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
 \toprule
 \textbf{Dataset} & \textbf{Model} & \multicolumn{8}{c}{\textbf{Query Strategy}}\\
-\cmidrule{3-10} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE} & \multicolumn{2}{c}{\hspace*{4pt}WCS} & \multicolumn{2}{c}{\hspace*{4pt}RWCS}\\
+\cmidrule{3-14} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE} & \multicolumn{2}{c}{\hspace*{4pt}WCS} & \multicolumn{2}{c}{\hspace*{4pt}RCS}\\
 \midrule
 
-\multirow{2}{*}{AGN}  & BERT & 0.884 & 0.004 & \bfseries 0.889 & \bfseries 0.01 &  0.874 & 0.012 & 0.881 & 0.01 & 0.873 & 0.011 & 0.873 & 0.022\\ 
+\multirow{2}{*}{AGN}  & BERT & 0.884 & 0.004 & \bfseries 0.889 & \bfseries 0.010 &  0.874 & 0.012 & 0.881 & 0.010 & 0.873 & 0.011 & 0.873 & 0.022\\ 
  & SetFit & 0.886 & 0.006 & 0.902 & 0.004 & 0.895 & 0.003 & 0.895 & 0.003 & 0.895 & 0.005 & \bfseries 0.908 & \bfseries 0.002 \\
  
 \midrule
  
-\multirow{2}{*}{MR}  & BERT & 0.806 & 0.011 & 0.815 & 0.009 & 0.77 & 0.015 & 0.796 & 0.02 & 0.806 & 0.014 & \bfseries 0.817 & \bfseries 0.01\\ 
+\multirow{2}{*}{MR}  & BERT & 0.806 & 0.011 & 0.815 & 0.009 & 0.77 & 0.015 & 0.796 & 0.020 & 0.806 & 0.014 & \bfseries 0.817 & \bfseries 0.010\\ 
  & SetFit & 0.869 & 0.006 & 0.88 & 0.005 & 0.871 & 0.005 & 0.874 & 0.005 & 0.874 & 0.007 & \bfseries 0.884 & \bfseries 0.005 \\
 
 \midrule
@@ -297,15 +301,15 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
 \toprule
 \textbf{Dataset} & \textbf{Model} & \multicolumn{8}{c}{\textbf{Query Strategy}}\\
-\cmidrule{3-10} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE} & \multicolumn{2}{c}{\hspace*{4pt}WCS} & \multicolumn{2}{c}{\hspace*{4pt}RWCS}\\
+\cmidrule{3-14} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE} & \multicolumn{2}{c}{\hspace*{4pt}WCS} & \multicolumn{2}{c}{\hspace*{4pt}RCS}\\
 \midrule
 
-\multirow{2}{*}{AGN}  & BERT & 0.79 & 0.015 & 0.8 & 0.009 & 0.735 & 0.02 & 0.792 & 0.007 & 0.731 & 0.014 & \bfseries 0.805 & \bfseries 0.01\\ 
+\multirow{2}{*}{AGN}  & BERT & 0.790 & 0.015 & 0.800 & 0.009 & 0.735 & 0.020 & 0.792 & 0.007 & 0.731 & 0.014 & \bfseries 0.805 & \bfseries 0.010\\ 
  & SetFit & 0.865 & 0.007 & 0.881 & 0.004 & 0.871 & 0.005 & 0.875 & 0.004 & 0.87 & 0.003 & \bfseries 0.884 & \bfseries 0.002 \\
 
 \midrule
 
-\multirow{2}{*}{MR}  & BERT & 0.75 & 0.007 & 0.746 & 0.011 & 0.718 & 0.009 & 0.741 & 0.017 & 0.72 & 0.004 & \bfseries 0.759 & \bfseries 0.007\\ 
+\multirow{2}{*}{MR}  & BERT & 0.750 & 0.007 & 0.746 & 0.011 & 0.718 & 0.009 & 0.741 & 0.017 & 0.720 & 0.004 & \bfseries 0.759 & \bfseries 0.007\\ 
  & SetFit & 0.854 & 0.002 & 0.864 & 0.005 & 0.856 & 0.003 & 0.862 & 0.003 & 0.858 & 0.007 & \bfseries 0.866 & \bfseries 0.003 \\
 
 \midrule
