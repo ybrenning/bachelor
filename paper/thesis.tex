@@ -28,7 +28,7 @@
 % Supervisors should usually be Professors from the candidate's university. A second supervisor is not always needed. 
 \ThesisSetSupervisors{Christopher Schröder, Christian Kahmann}
 
-\ThesisSetSubmissionDate{31}{2}{2022}
+\ThesisSetSubmissionDate{21}{4}{2024}
 
 %
 % Suggested Packages
@@ -46,7 +46,9 @@
 % \usepackage[ruled,algochapter]{algorithm2e}
 %    A package for pseudo code algorithms.
 %
-% \usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
 %    For tabular-style formatting of mathematical environments.
 %
 
@@ -75,6 +77,9 @@
 % \usehyperref[backref] % This will add back references in the bibliography that some people like ... some don't ... so better ask your supervisor ;-)
 \usehyperref
 
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{}
+
 \begin{document}
 \begin{frontmatter}
 \begin{abstract}
@@ -101,7 +106,7 @@ However, Core-Set has been shown to have mixed results in cases of text classifi
 
 % Particularly in first case, the experiments conducted on the Internal Dataset and TREC-6 show that Core-Set performs poorly when comparing the F1-scores to the random sampling strategy. 
 
-This thesis aims to explore the possibility of improving the Core-Set approach for text classification tasks. By first explaining Core-Set's functionality and the theoretical reasons for why it tends to underperform in certain classification tasks, I aim to then demonstrate the performance difference in comparison to various baseline approaches on large datasets of text content in order to verify this claim. Furthermore, this thesis looks to improve on the Core-Set approach within the context of text classification tasks and demonstrate this improvement as a part of its experiment.
+This thesis aims to explore the possibility of improving the Core-Set approach for text classification tasks. By first explaining Core-Set's functionality and the theoretical reasons for why it tends to underperform in certain classification tasks, I aim to then demonstrate the performance difference in comparison to various baseline approaches on large datasets of text content in order to verify this claim. Furthermore, this thesis looks to modify and attempt to improve the Core-Set approach within the context of text classification tasks and demonstrate the results of these modifications as a part of its experiment.
 
 In the following, Chapter 2 explains the background and related work on the topics of text classification (Section 2.1), active learning in general (Section 2.2), and the Core-Set approach to AL more specifically (Section 2.3). In Chapter 3, I will explain my approach to improving the performance of Core-Set for text classification using dimensionality reduction. In Chapters 4 and 5, I will present my experiment as well as discuss its results. Finally, Chapter 6 will conclude the thesis and provide insights on potential future developments of the method. 
 
@@ -148,13 +153,44 @@ This thesis considers the case of the pool-based scenario, as does the original 
 
 \section{Core-Set}
 
-The Core-Set approach as proposed in \cite{DBLP:conf/iclr/SenerS18} was originally designed for convolutional neural networks (CNNs) to tackle the problem of AL algorithms on large datasets. The empirical studies conducted by \cite{DBLP:conf/iclr/SenerS18} show that Core-Set outperforms other approaches within the field of image classification.
+
+The Core-Set approach as proposed in \cite{DBLP:conf/iclr/SenerS18} was originally designed for convolutional neural networks (CNNs) to tackle the problem of AL algorithms on large datasets. The empirical studies conducted by \cite{DBLP:conf/iclr/SenerS18} show that Core-Set outperforms other established query strategies when applied in the field of computer vision.
 
 The task of active learning is defined as a \textit{core-set selection} problem in which the algorithm selects a smaller subset of points with increased diversity to learn from such that the model can be competitive over a larger dataset. This problem ends up being equivalent to the \textit{k-Center} problem (\cite{DBLP:conf/iclr/SenerS18}), which is also referred to as the minimax facility location problem. 
 
-In mathemetical terms, given a set of points $ N $ and a budget $ k \leq |N| $, k-Center finds a subset $ \mathbf{s} \subseteq N $ of $ k $ points such that the minimum distance of any point in $ N \setminus \mathbf{s} $ to its closest center in $ \mathbf{s} $ is maximal. Another way of viewing this problem is by placing circles around the points in our set of centers. If we denote the maximum distance of any point in $ N $ to its nearest center in $ \mathbf{s} $ with $ \delta_{\mathbf{s}} $ and we place circles with a $ \delta_{\mathbf{s}} $-radius around each center in $ \mathbf{s} $, we can "cover" the entire set of points $ N $. In other words, k-Center attempts to find the minimum $ \delta_{\mathbf{s}} $ such that all points lie within the union of the $ \delta_{\mathbf{s}} $-circles when placed upon each center. This problem has been shown to be NP-hard (\cite{DBLP:journals/dam/HsuN79}, \cite{DBLP:journals/anor/Hochbaum84}). As a result, Core-Set uses a greedy approach to solve the Core-Set problem. However, it is worth noting that approximations of the algorithm are bound by twice the optimal solution (\cite{DBLP:journals/dam/HsuN79}). 
+In mathemetical terms, given a set of points $ N $ and a budget $ k \leq |N| $, k-Center finds a subset $ \mathbf{s} \subseteq N $ of $ k $ points such that the minimum distance of any point in $ N \setminus \mathbf{s} $ to its closest center in $ \mathbf{s} $ is maximal. Core-Set applies this concept to the field of AL in that the $ k $ centers selected from $ N $ will be the instances selected to be labelled by our oracle.
 
-Let $ OPT $ denote the maximum distance of a center to a point in the optimal solution to k-Center. Then k-Center greedy's resulting maximum distance $ \delta_{\mathbf{s}} $ to any center in $ \mathbf{s} $ is at the worst $ 2 \cdot OPT $. The original paper by Sener and Saverese attempts to further improve the robustness of this approximation by placing an upper limit on the number of outliers that can be selected. This thesis will be focusing on and using the regular k-Center greedy algorithm for ease of implementation and interpretability. (?)
+Another way of viewing this problem is by placing circles around the points in our set of centers. If we denote the maximum distance of any point in $ N $ to its nearest center in $ \mathbf{s} $ with $ \delta_{\mathbf{s}} $ and we place circles with a $ \delta_{\mathbf{s}} $-radius around each center in $ \mathbf{s} $, we can "cover" the entire set of points $ N $. In other words, k-Center attempts to find the minimum $ \delta_{\mathbf{s}} $ such that all points lie within the union of the $ \delta_{\mathbf{s}} $-circles when placed upon each center (depicted in \ref{fig:coreset}). Due to the nature of k-Center, the selected points can be quite spread out throughout the dataset in order to "cover" all the unselected points, making this a diversity-based approach. 
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{img/core-set.png}
+    \caption{Visualization of the k-Center approach from the original Core-Set paper. $ \mathbf{s} $ denotes the set of $ k $ selected points, $ \delta_{\mathbf{s}} $ denotes the maximum distance of any point in $ N $ to its nearest center in $ \mathbf{s} $.}
+    \label{fig:coreset}
+\end{figure}
+
+This problem has been shown to be NP-hard (\cite{DBLP:journals/dam/HsuN79}, \cite{DBLP:journals/anor/Hochbaum84}). As a result, Core-Set uses a greedy approach to solve the Core-Set problem. However, it is worth noting that approximations of the algorithm are bound by twice the optimal solution (\cite{DBLP:journals/dam/HsuN79}). Let $ OPT $ denote the maximum distance of a center to a point in the optimal solution to k-Center. Then k-Center greedy's resulting maximum distance $ \delta_{\mathbf{s}} $ to any center in $ \mathbf{s} $ is at the worst $ 2 \cdot OPT $. The pseudocode for k-Center greedy adapted to the active learning context can be seen in \ref{alg:coreset}.
+
+\begin{algorithm}
+\caption{k-Center-Greedy}%
+\makeatletter\def\@currentlabel{CS}\makeatother
+\label{alg:coreset}
+\begin{algorithmic}
+
+
+\Require data $ \mathbf{x}_i $, existing pool $ \mathbf{s}^0 $, budget $ b $
+\State Initialize $ \mathbf{s} = \mathbf{s}^0 $
+\Repeat
+\State $ u = \text{argmax}_{i \in [n] \setminus \mathbf{s}} \text{min}_{j \in \mathbf{s}} \Delta(\mathbf{x}_i, \mathbf{x}_j) $
+\State $ \mathbf{s} = \mathbf{s} \cup \{u\} $
+\Until{$ |\mathbf{s}| = b + |\mathbf{s}^0|$}
+
+\State \textbf{return} $\mathbf{s} \setminus \mathbf{s}^0 $
+\end{algorithmic}
+\end{algorithm}
+
+The original paper by Sener and Saverese attempts to further improve the robustness of this approximation by placing an upper limit on the number of outliers that can be selected. This thesis will be focusing on and using the regular k-Center greedy algorithm for ease of implementation and interpretability. (?)
 
 \section{Dimensionality Reduction}
 
@@ -170,19 +206,89 @@ This method is especially useful for the visualization of high-dimensional data,
 
 \chapter{Approach}
 
-As mentioned, distance-based methods such as Core-Set can be ineffective in higher dimensions. To overcome this challenge, I propose the application of t-SNE as a dimensionality reduction technique on the training data before employing the Greedy Core-Set strategy. In order to optimize my use of t-SNE, I will first examine the effects of different hyperparameters on the reductions. Based on these examinations, I will select the optimal t-SNE parameters to use for the experiment. 
+As mentioned, distance-based methods such as Core-Set can be ineffective in higher dimensions. To overcome this challenge, I propose the application of t-SNE as a dimensionality reduction technique on the training data before employing the Greedy Core-Set strategy. In esssence, this would modify the original k-Center greedy approach in that the distances computed between the points in $ \mathbf{s} $ and the unselected points would be different, since the algorithm would take in reduced embeddings (this modification is noted in the pseudocode for \ref{alg:coreset-tsne}).
+
+\begin{algorithm}
+\caption{t-SNE with k-Center-Greedy}%
+\makeatletter\def\@currentlabel{CS-TSNE}\makeatother
+\label{alg:coreset-tsne}
+\begin{algorithmic}
+
+
+\Require data $ \mathbf{x}_i $, existing pool $ \mathbf{s}^0 $, budget $ b $
+\State Initialize $ \mathbf{s} = \mathbf{s}^0 $
+\Repeat
+\State $ u = \text{argmax}_{i \in [n] \setminus \mathbf{s}} \text{min}_{j \in \mathbf{s}} \Delta_{TSNE}(\mathbf{x}_i, \mathbf{x}_j) $
+\Comment{Computing distances on}
+\State $ \mathbf{s} = \mathbf{s} \cup \{u\} $
+\Comment{reduced embeddings}
+\Until{$ |\mathbf{s}| = b + |\mathbf{s}^0|$}
+
+\State \textbf{return} $\mathbf{s} \setminus \mathbf{s}^0 $
+\end{algorithmic}
+\end{algorithm}
 
 Next, I will examine the effect of pointwise probabilities on the Core-Set algorithm. Core-Set currently operates using the distances between its points -- in this experiment, I propose an approach where Core-Set considers the probability distributions in addition to the distances. 
 
-To accomplish this, I will be using an uncertainty-based approach. Uncertainty sampling, which was introduced by \cite{DBLP:conf/sigir/LewisG94}, essentially attempts to select the unlabelled examples with the lowest classification certainty. In this case, I specifically opted for an approach similar to that of Breaking-Ties (\cite{DBLP:journals/jmlr/LuoKGHSRH05}), where the instances with the smallest margin between their top two most likely classification probabilities are selected, essentially "breaking the tie" between the two most likely classes. The results of this calculation will then be multiplied as a weight vector with the distances normally used by Core-Set.
+To accomplish this, I will be using an uncertainty-based approach. Uncertainty sampling, which was introduced by \cite{DBLP:conf/sigir/LewisG94}, essentially attempts to select the unlabelled examples with the lowest classification certainty. In this case, I specifically opted for an approach similar to that of Breaking-Ties (\cite{DBLP:journals/jmlr/LuoKGHSRH05}), where the instances with the smallest margin between their top two most likely classification probabilities are selected, essentially "breaking the tie" between the two most likely classes. In other words, if $ \mathbf{p}_{j, k}^* $ denotes the probability of the $ k $-th most likely class label for the $ j $-th instance, then Breaking-Ties seeks to select instances where $ \mathbf{p}_{j, 1}^* - \mathbf{p}_{j, 2}^* $ is minimal.
 
-This approach resulted in two different implementation ideas: the first, which we will call "Weighted Greedy Core-Set" (WCS), calculates the uncertainties prior to executing the standard Core-Set algorithm, then multiplies the resulting Core-Set distances and probabilities using weights (in this case, I used a 80-20 weighting in favour of the Core-Set distances). 
+This approach resulted in two different implementation ideas: the first, which I will refer to as "Weighted Greedy Core-Set" (\ref{alg:wgc}), calculates the uncertainties prior to executing the standard Core-Set algorithm, then multiplies the resulting Core-Set distances and probabilities using weights (in this case, I used a 80-20 weighting in favour of the Core-Set distances). 
 
-The second, which I will call "Ranked Weighted Greedy Core-Set" (RWCS), opts to first compute a Core-Set twice the size of the original sample size $n$, then "re-ranks" the resulting distances according to Breaking-Ties uncertainties and finally selects the points with the $n$ highest uncertainties.
+\begin{algorithm}
+\caption{Weighted k-Center-Greedy}%
+\makeatletter\def\@currentlabel{WCS}\makeatother
+\label{alg:wgc}
+\begin{algorithmic}
+
+
+\Require $ \mathbf{x}_i $, $ \mathbf{s}^0 $, $ b $, breaking-ties probabilities $ \mathbf{p}_{bt} $
+\State Initialize $ \mathbf{s} = \mathbf{s}^0 $
+\Repeat
+\State $ u = \text{argmax}_{i \in [n] \setminus \mathbf{s}} \text{min}_{j \in \mathbf{s}} \Delta(\mathbf{x}_i, \mathbf{x}_j) $
+\State $ \mathbf{s} = \mathbf{s} \cup \{u\} $
+\Until{$ |\mathbf{s}| = b + |\mathbf{s}^0|$}
+\State $ \mathbf{s} = 0.8 \cdot \mathbf{s}  + 0.2 \cdot \mathbf{p}_{bt} $
+\Comment{Weigh results using linear combination}
+
+\State \textbf{return} $\mathbf{s} \setminus \mathbf{s}^0 $
+\end{algorithmic}
+\end{algorithm}
+
+The second, which I will call "Ranked Weighted Greedy Core-Set" (\ref{alg:rwgc}), opts to first compute a Core-Set twice the size of the original sample size $b$, then "re-ranks" the resulting distances according to Breaking-Ties uncertainties and finally selects the points with the $b$ highest uncertainties.
+
+\begin{algorithm}
+\caption{Re-ranked k-Center-Greedy}%
+\makeatletter\def\@currentlabel{RWCS}\makeatother
+\label{alg:rwgc}
+\begin{algorithmic}
+
+
+\Require $ \mathbf{x}_i $, $ \mathbf{s}^0 $, $ b $, class probabilities $ \mathbf{p}_i $
+\State Initialize $ \mathbf{s} = \mathbf{s}^0, r = \emptyset $
+\Repeat
+\State $ u = \text{argmax}_{i \in [n] \setminus \mathbf{s}} \text{min}_{j \in \mathbf{s}} \Delta(\mathbf{x}_i, \mathbf{x}_j) $
+\State $ \mathbf{s} = \mathbf{s} \cup \{u\} $
+\Until{$ |\mathbf{s}| = 2b + |\mathbf{s}^0|$}
+\Comment{Compute Core-Set of size $2b$}
+
+%\State $ \mathbf{p}_{bt} = \text{breaking\_ties}_{i \in \mathbf{s}}(\mathbf{p}_i) $
+
+%\State $ \mathbf{s} = \mathbf{s} \cap \text{argpartition}(\mathbf{p}_{bt}, b) $
+
+\Repeat
+\State $ u = \text{argmin}_{j \in \mathbf{s} \setminus r}\mathbf{p}_{j, 1}^* - \mathbf{p}_{j, 2}^* $
+\State $ r = r \cup \{u\} $
+\Until{$ |r| = b $}
+\Comment{Compute the $b$-highest BT-scores}
+
+\State \textbf{return} $ r $
+\end{algorithmic}
+\end{algorithm}
+\noindent Where $ \mathbf{p}_{j, k}^* $ denotes the probability of the $ k $-th most likely class label for the $ j $-th instance 
 
 Finally, I will take into account the class distributions within each Core-Set and select points based on the representation of each class.
 
-The experiment will be conducted with two models on three well-known classification datasets and will measure the performances throughout 5 runs per combination. I have chosen two state-of-the-art transformers, BERT (\cite{DBLP:conf/naacl/DevlinCLT19}) and SetFit (\cite{DBLP:setfit}) as models for this experiment.
+The experiment will be conducted with two models on three well-known classification datasets and will measure the performances throughout 5 runs per combination. 
 
 \chapter{Experiment}
 
@@ -235,7 +341,10 @@ Starting at a perplexity of 30, the points begin to cluster more and more tightl
 
 It is also worth noting that the differences between 1,000 and 5,000 iterations appear quite small despite the relative increase in computations. \dots
 
-The experiment is conducted using 20 queries on 25 instances, with a validation set size of 10\%. The experiment is averaged over five runs of queries per combination of dataset, model and query strategy. 
+I have chosen two state-of-the-art transformers, BERT (\cite{DBLP:conf/naacl/DevlinCLT19}) and SetFit (\cite{DBLP:setfit}) as models for this experiment. BERT is an established language model pre-trained on 3,300M english words. It uses bidirectional self-attention in order to incorporate context from both directions of a given token. For this experiment, I will be using BERT\textsubscript{BASE}, which consists of 12 layers, hidden units of size 768 with 110M parameters in total. SetFit, on the other hand, is based on sentence transformers (\cite{DBLP:conf/emnlp/ReimersG19}) which are then fine-tuned in a contrastive manner.
+
+The experiment is conducted by performing 20 queries on 25 instances, with a validation set size of 10\%. The results will be averaged over five runs of queries per combination of dataset, model and query strategy. Alongside the original Core-Set, I will be comparing my different approaches with Random Sampling (RS) and Breaking-Ties (BT). RS offers a good view of a baseline performance and will be interesting when compared to Core-Set. BT, on the other hand, may serve as a good upper bound when looking at improving Core-Set's performance. 
+
 
 \section{Experiment Results}
 
