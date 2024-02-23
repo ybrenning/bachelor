@@ -125,15 +125,15 @@ Beyond that, many applications of text classification require multiple classes, 
 % **PROCESS**
 Generally, text classification methods can be divided into the following phases: data collection and preprocessing, feature extraction, classifier selection, and model evaluation (\cite{DBLP:journals/information/KowsariMHMBB19}, \cite{DBLP:journals/eswa/MironczukP18}, \cite{ikonomakis2005text}).
 
-In the first stage, some form of text data necessary to complete some classification objective is acquired, ideally of a sufficient amount. There are several open data sets that are publicly available for this stage. The preprocessing phase includes steps such as lemmatization, removal of stop words, tokenization and stemming. 
+In the first stage, some form of text data necessary to complete some classification objective is acquired, ideally of a sufficient amount. There are several open data sets that are publicly available to this end. The preprocessing phase includes steps such as lemmatization, removal of stop words, tokenization and stemming. 
 
-The preprocessed text data must them be converted into numerical feature vectors. There are a number of techniques for accomplishing this such as Bag-of-Words, TF-IDF (Term Frequency-Inverse Document Frequency), and word embedding methods such as Word2Vec or GloVe. In addition to the methods just mentioned which are known as static word embeddings, there exist context-sensitive methods as of the late-2010s such as BERT and ELMo (\cite{DBLP:conf/naacl/DevlinCLT19}, \cite{DBLP:conf/naacl/PetersNIGCLZ18}), which can better represent the varied senses encompassed by words depending on their contexts.
+The preprocessed text data must them be converted into numerical feature vectors. There are a number of techniques for accomplishing this such as Bag-of-Words, TF-IDF (Term Frequency-Inverse Document Frequency), and word embedding methods such as Word2Vec or GloVe. In addition to the word embedding methods just mentioned which are known as static word embeddings, there exist context-sensitive methods as of the late-2010s such as BERT and ELMo (\cite{DBLP:conf/naacl/DevlinCLT19}, \cite{DBLP:conf/naacl/PetersNIGCLZ18}), which can better represent the varied senses encompassed by words depending on their contexts.
 
 The next phase, classifier selection, is one of the most crucial steps in the text classification pipeline. Without a comprehensive grasp of the underlying concepts of each algorithm, we cannot effectively determine an appropriate model for the task. Commonly known algorithms include Logistic Regression, Naive Bayes and Support Vector Machines. More recently deep learning models such as Convolutional Neural Networks (CNNs), Recurrent Neural Networks (RNNs) and Transformer Models have become established as state-of-the-art approaches, especially when considering large text classification tasks. These different deep learning algorithms are increasingly popular due to their ability to model more complex and non-linear relationships within data (\cite{DBLP:journals/nature/LeCunBH15}). The Core-Set approach was also originally developed for the deep learning domain, more specifically CNNs. As a result, this thesis will also be focusing on the use of deep learning models, specifically transformers.
 
-Model evaluation is usually the "final" phase of the text classification process. This encompassees the assessment of the classifier's performance, for which a myriad of metrics such as accuracy, F1-score and AUC can be employed. Based on the evaluation, one can select a suitable model/strategy as well as attempt to optimize it.
+Model evaluation is usually the ``final'' phase of the text classification process. This encompassees the assessment of the classifier's performance, for which a myriad of metrics such as accuracy, F1-score and AUC can be employed. Based on the evaluation, one can select a suitable model/strategy as well as attempt to optimize it.
 
-The process of text classification clearly includes many steps which can be optimized and examined. Due to this, going over the entire process in detail would exceed the scope of this thesis. With this in mind, this thesis' experiment does not focus on the initial steps such as data collection, preprocessing and feature extraction, but rather the model training and evaluation steps.
+The process of text classification clearly includes many steps which can be optimized and examined. For this reason, going over the entire process in detail would exceed the scope of this thesis. With this in mind, this thesis' experiment does not focus on the initial steps such as data collection, preprocessing and feature extraction, but rather the model training and evaluation steps.
 
 % **CHALLENGES(?)**
 
@@ -147,12 +147,11 @@ In the case of membership query synthesis, a membership query is created in the 
 
 Stream-based selective sampling, on the other hand, typically examines each unlabelled instance one at a time and decides whether to query the oracle or to assign a label (\cite{settles.tr09}).
 
-Finally, we consider the pool-based approach as one of the commonly known applications of AL. This scenario assumes a large set of unlabelled instances and a small set of labelled instaces, from which queries can be selectively drawn using a \textit{query strategy}. This can be useful in many real-world problems where plenty of unlabelled data is available and the pool is assumed to be closed (though this is not necessarily always the case) (\cite{settles.tr09}).
+Finally, we consider the pool-based approach as one of the commonly known applications of AL. This scenario assumes a large set of unlabelled instances and a small set of labelled instaces, from which queries can be selectively drawn using a \textit{query strategy}. The key difference to the stream-based approach is that pool-based learning considers the entire collection and attempts to select the most informative instances, as opposed to making individual query decisions. This can be useful in many real-world problems where plenty of unlabelled data is available and the pool is assumed to be closed (though this is not necessarily always the case) (\cite{settles.tr09}).
 
 This thesis considers the case of the pool-based scenario, as does the original Core-Set paper. It is worth mentioning however, that Core-Set has also been applied in the stream-based context (\cite{DBLP:conf/icml/SaranYK0A23}).
 
 \section{Core-Set}
-
 
 The Core-Set approach as proposed in \cite{DBLP:conf/iclr/SenerS18} was originally designed for convolutional neural networks (CNNs) to tackle the problem of AL algorithms on large datasets. The empirical studies conducted by \cite{DBLP:conf/iclr/SenerS18} show that Core-Set outperforms other established query strategies when applied in the field of computer vision.
 
@@ -162,18 +161,17 @@ In mathemetical terms, given a set of points $ N $ and a budget $ k \leq |N| $, 
 
 Another way of viewing this problem is by placing circles around the points in our set of centers. If we denote the maximum distance of any point in $ N $ to its nearest center in $ \mathbf{s} $ with $ \delta_{\mathbf{s}} $ and we place circles with a $ \delta_{\mathbf{s}} $-radius around each center in $ \mathbf{s} $, we can "cover" the entire set of points $ N $. In other words, k-Center attempts to find the minimum $ \delta_{\mathbf{s}} $ such that all points lie within the union of the $ \delta_{\mathbf{s}} $-circles when placed upon each center (depicted in \ref{fig:coreset}). Due to the nature of k-Center, the selected points can be quite spread out throughout the dataset in order to "cover" all the unselected points, making this a diversity-based approach. 
 
-
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=1\textwidth]{img/core-set.png}
-    \caption{Visualization of the k-Center approach from the original Core-Set paper. $ \mathbf{s} $ denotes the set of $ k $ selected points, $ \delta_{\mathbf{s}} $ denotes the maximum distance of any point in $ N $ to its nearest center in $ \mathbf{s} $.}
+    \caption{Visualization of the k-Center approach from \cite{DBLP:conf/iclr/SenerS18}. $ \mathbf{s} $ denotes the set of $ k $ selected points, $ \delta_{\mathbf{s}} $ denotes the maximum distance of any point in $ N $ to its nearest center in $ \mathbf{s} $.}
     \label{fig:coreset}
 \end{figure}
 
 This problem has been shown to be NP-hard (\cite{DBLP:journals/dam/HsuN79}, \cite{DBLP:journals/anor/Hochbaum84}). As a result, Core-Set uses a greedy approach to solve the Core-Set problem. However, it is worth noting that approximations of the algorithm are bound by twice the optimal solution (\cite{DBLP:journals/dam/HsuN79}). Let $ OPT $ denote the maximum distance of a center to a point in the optimal solution to k-Center. Then k-Center greedy's resulting maximum distance $ \delta_{\mathbf{s}} $ to any center in $ \mathbf{s} $ is at the worst $ 2 \cdot OPT $. The pseudocode for k-Center greedy adapted to the active learning context can be seen in \ref{alg:coreset}.
 
 \begin{algorithm}
-\caption{k-Center-Greedy}%
+    \caption{k-Center-Greedy (adopted from \cite{DBLP:conf/iclr/SenerS18})}%
 \makeatletter\def\@currentlabel{CS}\makeatother
 \label{alg:coreset}
 \begin{algorithmic}
@@ -190,7 +188,7 @@ This problem has been shown to be NP-hard (\cite{DBLP:journals/dam/HsuN79}, \cit
 \end{algorithmic}
 \end{algorithm}
 
-The original paper by Sener and Saverese attempts to further improve the robustness of this approximation by placing an upper limit on the number of outliers that can be selected. This thesis will be focusing on and using the regular k-Center greedy algorithm for ease of implementation and interpretability. (?)
+The original paper by \cite{DBLP:conf/iclr/SenerS18} attempts to further improve the robustness of this approximation by placing an upper limit on the number of outliers that can be selected. This thesis will be focusing on and using the regular k-Center greedy algorithm for ease of implementation and interpretability. (?)
 
 \section{Dimensionality Reduction}
 
@@ -244,11 +242,12 @@ This approach resulted in two different implementation ideas: the first, which I
 \Require $ \mathbf{x}_i $, $ \mathbf{s}^0 $, $ b $, breaking-ties probabilities $ \mathbf{p}_{bt} $
 \State Initialize $ \mathbf{s} = \mathbf{s}^0 $
 \Repeat
-\State $ u = \text{argmax}_{i \in [n] \setminus \mathbf{s}} \text{min}_{j \in \mathbf{s}} \Delta(\mathbf{x}_i, \mathbf{x}_j) $
+\State $ d = \text{min}_{j \in \mathbf{s}} \Delta(\mathbf{x}_i, \mathbf{x}_j) $ 
+    \State $ u = \text{argmax}_{i \in [n] \setminus \mathbf{s}} 0.8 \cdot d + 0.2 \cdot \mathbf{p}_{bt} $
+    \Comment{Weigh results using linear}
 \State $ \mathbf{s} = \mathbf{s} \cup \{u\} $
+\Comment{combination}
 \Until{$ |\mathbf{s}| = b + |\mathbf{s}^0|$}
-\State $ \mathbf{s} = 0.8 \cdot \mathbf{s}  + 0.2 \cdot \mathbf{p}_{bt} $
-\Comment{Weigh results using linear combination}
 
 \State \textbf{return} $\mathbf{s} \setminus \mathbf{s}^0 $
 \end{algorithmic}
@@ -294,17 +293,15 @@ The experiment will be conducted with two models on three well-known classificat
 
 \section{Data}
 
-This experiment was conducted across three datasets commonly used in the field of AL. These datasets are of three different types: sentiment analysis (S), questions (Q), and news (N). For binary classification, I used \textbf{Movie Review}, a sentiment analysis dataset (\cite{DBLP:conf/acl/PangL05}) containing 5,331 positive and 5,331 negative samples. For multi-class text classification, \textbf{AG's News} (\cite{DBLP:conf/nips/ZhangZL15}), comprised of 120,000 training samples and 7,600 test samples, and \textbf{TREC} (\cite{DBLP:journals/nle/LiR06}), a question dataset containing 5,500 training samples and 500 test samples.
+This experiment was conducted across three datasets commonly used in the field of text classification. These datasets are of three different types: sentiment analysis (S), questions (Q), and news (N). 
 
-The test set was only provided in the case of AG's News and TREC, in the case of Movie Review I employed a split of the 10,662 samples myself. \dots
-
-% The chosen datasets are Movie Review (MR), a sentiment analysis dataset with 10662 data points, TREC-6, a question dataset with {} data points, and finally AG-News, a topic dataset with 120,000 data points. Each of these datasets is commonly used in the field of AL. One must note that these are comparatively few data points, due to the fact that AL is a time and resource-expensive field.
+For binary classification, I used \textbf{Movie Review}, a sentiment analysis dataset (\cite{DBLP:conf/acl/PangL05}) containing 5,331 positive and 5,331 negative samples. For multi-class text classification, \textbf{AG's News} (\cite{DBLP:conf/nips/ZhangZL15}), comprised of 120,000 training samples and 7,600 test samples, and \textbf{TREC} (\cite{DBLP:journals/nle/LiR06}), a question dataset containing 5,500 training samples and 500 test samples. The test set was only provided in the case of AG's News and TREC, in the case of Movie Review I employed a split of the 10,662 samples myself.
 
 \section{Experiment Setup}
 
 As mentioned earlier, setting t-SNE's hyperparameters and exploring the resulting differing reduction behaviours has been shown to often be necessary (\cite{wattenberg2016how}). \cite{vanHomepage} mentions that examining the resulting plots is one of the best ways to assess the quality of the visualizations, in addition to comparing the Kullback-Leibler divergences. 
 
-Below, I have demonstrated the effect of t-SNE on a training set of the MR dataset (\cite{DBLP:conf/acl/PangL05}) containing 9,596 samples with a feature dimension of 768. The reductions are completed using perplexity values of 5, 30, 50 and 100 with iteration counts of 1,000 and 5,000 respectively. Note that the samples have been embedded using BERT and then normalized prior to the dimensionality reductions.
+% Below, I have demonstrated the effect of t-SNE on a training set of the MR dataset (\cite{DBLP:conf/acl/PangL05}) containing 9,596 samples with a feature dimension of 768. The reductions are completed using perplexity values of 5, 30, 50 and 100 with iteration counts of 1,000 and 5,000 respectively. Note that the samples have been embedded using BERT and then normalized prior to the dimensionality reductions.
 
 \iffalse
 \begin{figure}[htbp]
@@ -337,11 +334,11 @@ Below, I have demonstrated the effect of t-SNE on a training set of the MR datas
 
 \fi
 
-Starting at a perplexity of 30, the points begin to cluster more and more tightly. The clusters do not seem to separate in any of the runs -- it is important to note, however, that distances and sizes of the clusters do necessarily carry any meaning when examining the reduction plots (\cite{wattenberg2016how}, \cite{vanHomepage}).
+% Starting at a perplexity of 30, the points begin to cluster more and more tightly. The clusters do not seem to separate in any of the runs -- it is important to note, however, that distances and sizes of the clusters do necessarily carry any meaning when examining the reduction plots (\cite{wattenberg2016how}, \cite{vanHomepage}).
 
-It is also worth noting that the differences between 1,000 and 5,000 iterations appear quite small despite the relative increase in computations. \dots
+% It is also worth noting that the differences between 1,000 and 5,000 iterations appear quite small despite the relative increase in computations. \dots
 
-I have chosen two state-of-the-art transformers, BERT (\cite{DBLP:conf/naacl/DevlinCLT19}) and SetFit (\cite{DBLP:setfit}) as models for this experiment. BERT is an established language model pre-trained on 3,300M english words. It uses bidirectional self-attention in order to incorporate context from both directions of a given token. For this experiment, I will be using BERT\textsubscript{BASE}, which consists of 12 layers, hidden units of size 768 with 110M parameters in total. SetFit, on the other hand, is based on sentence transformers (\cite{DBLP:conf/emnlp/ReimersG19}) which are then fine-tuned in a contrastive manner.
+I have chosen two state-of-the-art transformers, BERT (\cite{DBLP:conf/naacl/DevlinCLT19}) and SetFit (\cite{DBLP:setfit}) to fine-tune as models for this experiment. BERT is an established language model pre-trained on 3,300M english words. It uses bidirectional self-attention in order to incorporate context from both directions of a given token, unlike many previous context-sensitive approaches which only considered a single direction. For this experiment, I will be using BERT\textsubscript{BASE}, which consists of 12 layers, hidden units of size 768 with 110M parameters in total. SetFit, on the other hand, is based on sentence transformers (\cite{DBLP:conf/emnlp/ReimersG19}) which are then fine-tuned in a contrastive manner.
 
 The experiment is conducted by performing 20 queries on 25 instances, with a validation set size of 10\%. The results will be averaged over five runs of queries per combination of dataset, model and query strategy. Alongside the original Core-Set, I will be comparing my different approaches with Random Sampling (RS) and Breaking-Ties (BT). RS offers a good view of a baseline performance and will be interesting when compared to Core-Set. BT, on the other hand, may serve as a good upper bound when looking at improving Core-Set's performance. 
 
