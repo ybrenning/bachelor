@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
-from matplotlib.legend_handler import HandlerBase
+import seaborn as sns
 
 from mlflow import get_experiment_by_name, search_runs
 from pathlib import Path
@@ -26,7 +26,7 @@ plt.rcParams['xtick.minor.size'] = 6
 plt.rcParams['xtick.minor.width'] = 1
 
 
-from active_learning_lab.experiments.active_learning.postprocess.learning_curves import plot_learning_curve
+from active_learning_lab.experiments.active_learning.postprocess.learning_curves import plot_learning_curve, plot_inset
 from active_learning_lab.utils.results import get_results, check_for_duplicates, check_for_reproduciblity, assemble_df
 
 
@@ -116,11 +116,15 @@ def plot_dataset(results, dataset, ax):
     results_bt = results.query(f'`params.dataset_name` == "{dataset}" and `params.query_strategy` == "lc-bt"')
     results_gc = results.query(f'`params.dataset_name` == "{dataset}" and `params.query_strategy` == "gc"')
     results_gc_tsne = results.query(f'`params.dataset_name` == "{dataset}" and `params.query_strategy` == "gc-tsne"')
+    results_wgc = results.query(f'`params.dataset_name` == "{dataset}" and `params.query_strategy` == "wgc"')
+    results_rwgc = results.query(f'`params.dataset_name` == "{dataset}" and `params.query_strategy` == "rwgc"')
 
     df_acc_random = assemble_df(results_random, 'results.csv')
     df_acc_bt = assemble_df(results_bt, 'results.csv')
     df_acc_gc = assemble_df(results_gc, 'results.csv')
     df_acc_gc_tsne = assemble_df(results_gc_tsne, 'results.csv')
+    df_acc_wgc = assemble_df(results_wgc, 'results.csv')
+    df_acc_rwgc = assemble_df(results_rwgc, 'results.csv')
 
     sample_sizes = df_acc_random['num_samples'].unique()
 
@@ -129,6 +133,21 @@ def plot_dataset(results, dataset, ax):
                                if i % 5 == 0])
 
     ax.xaxis.set_ticklabels(['25', '', '275', '', '525'])
+
+    palette = sns.color_palette('tab10')
+
+    from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
+    axins = zoomed_inset_axes(ax, 1.5, loc="lower right",
+                             #borderpad=2.5,bbox_to_anchor=(1, -0.2),bbox_transform=ax.transAxes
+                              )
+    x1, x2, y1, y2 = 400, 525, 0.7, 1.0
+    axins.set_xlim(x1, x2)
+    axins.set_ylim(y1, y2)
+    axins.get_xaxis().set_visible(False)
+    axins.tick_params(axis="y", labelsize=12)
+   # axins.set_yticks([0.85, 0.9, 0.95])
+    # axins.get_yaxis().set_visible(False)
+    axins.set_box_aspect(1)
 
     data_random = []
 
@@ -142,8 +161,20 @@ def plot_dataset(results, dataset, ax):
         ax,
         sample_sizes,
         np.array(data_random, dtype=float),
-        ['BERT', 'SetFit'],
+        ['BERT'],
         strategy_name='random',
+        palette=palette[0],
+        show_uncertainty='tube-sd'
+    )
+
+    plot_inset(
+        ax,
+        axins,
+        sample_sizes,
+        np.array(data_random, dtype=float),
+        ['BERT'],
+        strategy_name='random',
+        palette=palette[0],
         show_uncertainty='tube-sd'
     )
 
@@ -158,8 +189,20 @@ def plot_dataset(results, dataset, ax):
         ax,
         sample_sizes,
         np.array(data_bt, dtype=float),
-        ['BERT', 'SetFit'],
+        ['BERT'],
         strategy_name='lc-bt',
+        palette=palette[1],
+        show_uncertainty='tube-sd'
+    )
+
+    plot_inset(
+        ax,
+        axins,
+        sample_sizes,
+        np.array(data_bt, dtype=float),
+        ['BERT'],
+        strategy_name='lc-bt',
+        palette=palette[1],
         show_uncertainty='tube-sd'
     )
 
@@ -174,8 +217,20 @@ def plot_dataset(results, dataset, ax):
         ax,
         sample_sizes,
         np.array(data_gc, dtype=float),
-        ['BERT', 'SetFit'],
+        ['BERT'],
         strategy_name='gc',
+        palette=palette[2],
+        show_uncertainty='tube-sd'
+    )
+
+    plot_inset(
+        ax,
+        axins,
+        sample_sizes,
+        np.array(data_gc, dtype=float),
+        ['BERT'],
+        strategy_name='gc',
+        palette=palette[2],
         show_uncertainty='tube-sd'
     )
 
@@ -190,8 +245,76 @@ def plot_dataset(results, dataset, ax):
         ax,
         sample_sizes,
         np.array(data_gc_tsne, dtype=float),
-        ['BERT', 'SetFit'],
+        ['BERT'],
         strategy_name='gc-tsne',
+        palette=palette[3],
+        show_uncertainty='tube-sd'
+    )
+
+    plot_inset(
+        ax,
+        axins,
+        sample_sizes,
+        np.array(data_gc_tsne, dtype=float),
+        ['BERT'],
+        strategy_name='gc-tsne',
+        palette=palette[3],
+        show_uncertainty='tube-sd'
+    )
+
+    data_wgc = []
+    for clf in ['transformer', 'setfit']:
+        run = []
+        for run_id in df_acc_wgc['run_id'].unique():
+            run.append(df_acc_wgc.query(f'`classifier` == "{clf}" and run_id == {run_id}')['test_acc'].tolist())
+        data_wgc.append(run)
+
+    plot_learning_curve(
+        ax,
+        sample_sizes,
+        np.array(data_wgc, dtype=float),
+        ['BERT'],
+        strategy_name='wgc',
+        palette=palette[4],
+        show_uncertainty='tube-sd'
+    )
+
+    plot_inset(
+        ax,
+        axins,
+        sample_sizes,
+        np.array(data_wgc, dtype=float),
+        ['BERT'],
+        strategy_name='wgc',
+        palette=palette[4],
+        show_uncertainty='tube-sd'
+    )
+
+    data_rwgc = []
+    for clf in ['transformer', 'setfit']:
+        run = []
+        for run_id in df_acc_rwgc['run_id'].unique():
+            run.append(df_acc_rwgc.query(f'`classifier` == "{clf}" and run_id == {run_id}')['test_acc'].tolist())
+        data_rwgc.append(run)
+
+    plot_learning_curve(
+        ax,
+        sample_sizes,
+        np.array(data_rwgc, dtype=float),
+        ['BERT'],
+        strategy_name='rwgc',
+        palette=palette[5],
+        show_uncertainty='tube-sd'
+    )
+
+    plot_inset(
+        ax,
+        axins,
+        sample_sizes,
+        np.array(data_rwgc, dtype=float),
+        ['BERT'],
+        strategy_name='rwgc',
+        palette=palette[5],
         show_uncertainty='tube-sd'
     )
 
@@ -207,8 +330,8 @@ def plot_all_datasets():
     results = check_for_reproduciblity(results)
 
     fig, axs = plt.subplots(1, 3, sharex=True, sharey=True)
-    fig.set_figheight(7.5 * 0.7)
-    fig.set_figwidth(6 * 3 * 0.7)
+    fig.set_figheight(7.5)
+    fig.set_figwidth(6 * 3)
 
     datasets = ['mr', 'ag-news', 'trec']
     for i in range(0, 3):
@@ -219,37 +342,39 @@ def plot_all_datasets():
 
     extra = Rectangle((0, 0), 1, 1, fc="w", fill=False, edgecolor='none', linewidth=0)
     lines = axs[0].get_lines()
+    labels = [line.get_label() for line in lines]
+    axs[0].legend(lines, labels)
+    axs[0].legend(ncol=2, bbox_to_anchor=(0.5, 1.5), borderaxespad=0, fontsize="xx-large")
+    # legend_handle = [
+    #     extra, extra, extra, extra,
+    #     lines[0], lines[1], extra,
+    #     lines[2], lines[3], extra,
+    #     lines[4], lines[5], extra,
+    #     lines[6], lines[7], extra, extra
+    # ]
 
-    legend_handle = [
-        extra, extra, extra, extra,
-        lines[0], lines[1], extra,
-        lines[2], lines[3], extra,
-        lines[4], lines[5], extra,
-        lines[6], lines[7], extra, extra
-    ]
-
-    label_col_one = ['', 'BERT', 'SetFit']
-    label_rs = ['RS']
-    label_bt = ['BT']
-    label_gc = ['CS']
-    label_gc_tsne = ['CS-TSNE']
-    label_empty = ['']
-    legend_labels = np.concatenate(
-        [label_col_one, label_rs, label_empty * 2, label_bt, label_empty * 2, label_gc, label_empty * 2, label_gc_tsne,
-         label_empty * 2]
-    )
-    fig.legend(legend_handle, legend_labels,
-               loc='upper center', ncol=5, handletextpad=-2, prop={'size': 14})
+    # label_col_one = ['', 'BERT', 'SetFit']
+    # label_rs = ['RS']
+    # label_bt = ['BT']
+    # label_gc = ['CS']
+    # label_gc_tsne = ['CS-TSNE']
+    # label_empty = ['']
+    # legend_labels = np.concatenate(
+    #     [label_col_one, label_rs, label_empty * 2, label_bt, label_empty * 2, label_gc, label_empty * 2, label_gc_tsne,
+    #      label_empty * 2]
+    # )
+    # fig.legend(legend_handle, legend_labels,
+    #            loc='upper center', ncol=5, handletextpad=-2, prop={'size': 14})
 
     fig.text(0.5, 0.1, 'Number of instances', ha='center', va='center', fontsize=20)
     fig.text(0.04, 0.45, 'Accuracy', ha='center', va='center', rotation='vertical', fontsize=20)
     plt.subplots_adjust(left=0.1, right=0.9, bottom=0.2, top=0.7)
-    plt.savefig('plots.pdf')
+    plt.savefig('bert-plots.pdf', bbox_inches='tight')
 
 
 def plot_perplexities(dataset_name, num_iters):
-    perplexities = np.arange(5, 115, 10)
-    divergences = np.load(f'divergences-{dataset_name}-{num_iters}.npy')
+    perplexities = np.arange(5, 500, 50)
+    divergences = np.load(f'500divergences-{dataset_name}-{num_iters}.npy')
 
     i = np.argmin(divergences)
     x_min = perplexities[i]
@@ -266,12 +391,29 @@ def plot_perplexities(dataset_name, num_iters):
     plt.xlabel('Perplexity', size=15)
     plt.ylabel('KL-Divergence', size=15)
 
-    plt.savefig(f"perplexities-{dataset_name}-{num_iters}.pdf")
+    plt.savefig(f"500perplexities-{dataset_name}-{num_iters}.pdf")
+
+
+def plot_all_perplexities(num_iters):
+    fig, axs = plt.subplots(1, 3, sharex=True, sharey=True)
+    fig.set_figheight(6)
+    fig.set_figwidth(6 * 4)
+
+    perplexities = np.arange(5, 115, 10)
+    for i, ds in enumerate(['mr', 'ag-news', 'trec']):
+        divergences = np.load(f'divergences-{ds}-{num_iters}.npy')
+        axs[i].plot(perplexities, divergences, linewidth=2.5)
+
+    fig.text(0.5, 0, 'Perplexity', ha='center', va='center', size=15)
+    fig.text(0.1, 0.5, 'KL-Divergence', ha='center', va='center', rotation='vertical', size=15)
+
+    plt.savefig(f'perplexities-{num_iters}.pdf')
 
 
 def main():
-    # plot_all_datasets()
-    plot_perplexities('mr', num_iters=5000)
+    plot_all_datasets()
+    # plot_perplexities('mr', num_iters=1000)
+    # plot_all_perplexities(num_iters=1000)
 
 
 if __name__ == '__main__':
