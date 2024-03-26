@@ -40,7 +40,7 @@
 \usepackage{booktabs}
 %    For tables ``looking the right way''.
 %
-% \usepackage{tabularx}
+\usepackage{tabularx}
 %    Enables tables with columns that automatically fill the page width.
 %
 % \usepackage[ruled,algochapter]{algorithm2e}
@@ -57,6 +57,7 @@
 
 \usepackage{multirow}
 \usepackage{pdfpages}
+\usepackage{pbox}
 \usepackage{graphicx}
 
 %
@@ -297,23 +298,41 @@ This experiment was conducted across three datasets commonly used in the field o
 
 For binary classification, I used \textbf{Movie Review}, a sentiment analysis dataset (\cite{DBLP:conf/acl/PangL05}) containing 5,331 positive and 5,331 negative samples. For multi-class text classification, \textbf{AG's News} (\cite{DBLP:conf/nips/ZhangZL15}), comprised of 120,000 training samples and 7,600 test samples, and \textbf{TREC} (\cite{DBLP:journals/nle/LiR06}), a question dataset containing 5,500 training samples and 500 test samples. The test set was only provided in the case of AG's News and TREC, in the case of Movie Review I employed a split of the 10,662 samples myself.
 
+
 % An example table; hint for 'cleaner' LaTeX files: move the table to a dedicated *.tex file named like the table label and then include it via \input{<table-label>}
 \begin{table}[p]% extra page (usually for large figures/tables)
-  \caption{Tables have their captions above, figures below.}
-  \label{table-with-numbers}%
-  \centering\small
-  \begin{tabular}{@{}lrrrr@{}} % use @{} to remove spacing; numbers should be right aligned
-    \toprule
-    % \multicolumn{4}{c}{\bfseries Some numbers}\\
-    % \midrule
-      \bfseries Dataset Name (ID) & \bfseries No. of classes & \bfseries Training & \bfseries Test & \bfseries Mean Instance Length \\
-    % \cmidrule(l){2-4} % cmidrule: A line from 2nd to 4th column, trimmed on the left hand side
-    \midrule
-      Movie Review (MR) & 2 & 9596 & 1066 & 114.16 \\
-      AG News (AGN) & 4 & 120,000 & 7600 &  236.41 \\
-      TREC-6 (TREC) & 6 & 5452 & 500 & 49.39 \\
-    \bottomrule
-  \end{tabular}
+    \centering
+    \setlength{\tabcolsep}{10pt} % Adjust the spacing between columns
+    \begin{tabular}{@{}lrrrr@{}} % use @{} to remove spacing; numbers should be right aligned
+        \toprule
+        % \multicolumn{4}{c}{\bfseries Some numbers}\\
+        % \midrule
+        \bfseries Dataset Name \scriptsize (ID) & \bfseries Classes & \bfseries Train & \bfseries Test & \bfseries MIL (*) \\
+        % \cmidrule(l){2-4} % cmidrule: A line from 2nd to 4th column, trimmed on the left hand side
+        \midrule
+        Movie Review \scriptsize (MR) & 2 & 9,596 & 1,066 & 114.16 \\
+        AG News \scriptsize (AGN) & 4 & 120,000 & 7,600 &  236.41 \\
+        TREC \scriptsize (TREC) & 6 & 5,452 & 500 & 49.39 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Information on the different datasets. (*) Mean Instance Length, refers to the mean number of characters in a single instance.}
+  \label{dataset-table}%
+\end{table}
+
+\begin{table}[htbp]
+    \centering
+    \renewcommand{\arraystretch}{1.5} % Increase the spacing between rows by a factor of 1.5
+    \begin{tabular}{@{}lrp{7cm}@{}} 
+        \toprule
+        \textbf{Dataset Name} \scriptsize (ID) & \textbf{Class} & \textbf{Example Instance} \\
+        \midrule
+        Movie Review \scriptsize (MR) & 1 (positive) & \texttt{if you sometimes like to go to the movies to have fun , wasabi is a good place to start .} \\
+        AG News \scriptsize (AGN) & 2  (Business) & \texttt{Wall St. Bears Claw Back Into the Black (Reuters) Reuters - Short-sellers, Wall Street's dwindling\textbackslash band of ultra-cynics, are seeing green again.} \\
+        TREC \scriptsize (TREC) & 2 ('DESC') & \texttt{How did serfdom develop in and then leave Russia ?} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Examples of instances and their corresponding labels from each dataset.}
+    \label{tab:dataset-instances}
 \end{table}
 
 \section{Experiment Setup}
