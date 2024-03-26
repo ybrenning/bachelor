@@ -4,3 +4,5 @@
 **.toc
 **.bbl
 **.blg
+
+**/__pycache__/
