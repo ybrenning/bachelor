@@ -159,7 +159,7 @@ The task of active learning is defined as a \textit{core-set selection} problem 
 
 In mathemetical terms, given a set of points $ N $ and a budget $ k \leq |N| $, k-Center finds a subset $ \mathbf{s} \subseteq N $ of $ k $ points such that the minimum distance of any point in $ N \setminus \mathbf{s} $ to its closest center in $ \mathbf{s} $ is maximal. Core-Set applies this concept to the field of AL in that the $ k $ centers selected from $ N $ will be the instances selected to be labelled by our oracle.
 
-Another way of viewing this problem is by placing circles around the points in our set of centers. If we denote the maximum distance of any point in $ N $ to its nearest center in $ \mathbf{s} $ with $ \delta_{\mathbf{s}} $ and we place circles with a $ \delta_{\mathbf{s}} $-radius around each center in $ \mathbf{s} $, we can "cover" the entire set of points $ N $. In other words, k-Center attempts to find the minimum $ \delta_{\mathbf{s}} $ such that all points lie within the union of the $ \delta_{\mathbf{s}} $-circles when placed upon each center (depicted in \ref{fig:coreset}). Due to the nature of k-Center, the selected points can be quite spread out throughout the dataset in order to "cover" all the unselected points, making this a diversity-based approach. 
+Another way of viewing this problem is by placing circles around the points in our set of centers. If we denote the maximum distance of any point in $ N $ to its nearest center in $ \mathbf{s} $ with $ \delta_{\mathbf{s}} $ and we place circles with a $ \delta_{\mathbf{s}} $-radius around each center in $ \mathbf{s} $, we can ``cover'' the entire set of points $ N $. In other words, k-Center attempts to find the minimum $ \delta_{\mathbf{s}} $ such that all points lie within the union of the $ \delta_{\mathbf{s}} $-circles when placed upon each center (depicted in \ref{fig:coreset}). Due to the nature of k-Center, the selected points tend to be spread out throughout the dataset in order to ``cover'' all the unselected points, making this a diversity-based approach. 
 
 \begin{figure}[htbp]
     \centering
@@ -168,7 +168,7 @@ Another way of viewing this problem is by placing circles around the points in o
     \label{fig:coreset}
 \end{figure}
 
-This problem has been shown to be NP-hard (\cite{DBLP:journals/dam/HsuN79}, \cite{DBLP:journals/anor/Hochbaum84}). As a result, Core-Set uses a greedy approach to solve the Core-Set problem. However, it is worth noting that approximations of the algorithm are bound by twice the optimal solution (\cite{DBLP:journals/dam/HsuN79}). Let $ OPT $ denote the maximum distance of a center to a point in the optimal solution to k-Center. Then k-Center greedy's resulting maximum distance $ \delta_{\mathbf{s}} $ to any center in $ \mathbf{s} $ is at the worst $ 2 \cdot OPT $. The pseudocode for k-Center greedy adapted to the active learning context can be seen in \ref{alg:coreset}.
+This problem has been shown to be NP-hard (\cite{DBLP:journals/dam/HsuN79}, \cite{DBLP:journals/anor/Hochbaum84}). As a result, Core-Set uses a greedy approach to solve the k-Center problem. However, it is worth noting that any approximation of k-Center is bound by twice the optimal solution (\cite{DBLP:journals/dam/HsuN79}). Let $ OPT $ denote the maximum distance of a center to a point in the optimal solution to k-Center, meaning the solution where $\delta_{\mathbf{s}} $ is minimal. Then the greedy approximation's resulting maximum distance $ \delta_{\mathbf{s}} $ to any center in $ \mathbf{s} $ is at the worst $ 2 \cdot OPT $ (\cite{mountkcenter}). The pseudocode for k-Center greedy adapted to the active learning context can be seen in \ref{alg:coreset}.
 
 \begin{algorithm}
     \caption{k-Center-Greedy (adopted from \cite{DBLP:conf/iclr/SenerS18})}%
@@ -228,9 +228,9 @@ As mentioned, distance-based methods such as Core-Set can be ineffective in high
 
 Next, I will examine the effect of pointwise probabilities on the Core-Set algorithm. Core-Set currently operates using the distances between its points -- in this experiment, I propose an approach where Core-Set considers the probability distributions in addition to the distances. 
 
-To accomplish this, I will be using an uncertainty-based approach. Uncertainty sampling, which was introduced by \cite{DBLP:conf/sigir/LewisG94}, essentially attempts to select the unlabelled examples with the lowest classification certainty. In this case, I specifically opted for an approach similar to that of Breaking-Ties (\cite{DBLP:journals/jmlr/LuoKGHSRH05}), where the instances with the smallest margin between their top two most likely classification probabilities are selected, essentially "breaking the tie" between the two most likely classes. In other words, if $ \mathbf{p}_{j, k}^* $ denotes the probability of the $ k $-th most likely class label for the $ j $-th instance, then Breaking-Ties seeks to select instances where $ \mathbf{p}_{j, 1}^* - \mathbf{p}_{j, 2}^* $ is minimal.
+To accomplish this, I will be using an uncertainty-based approach. Uncertainty sampling, which was introduced by \cite{DBLP:conf/sigir/LewisG94}, essentially attempts to select the unlabelled examples with the lowest classification certainty. In this case, I specifically opted for an approach similar to that of Breaking-Ties (\cite{DBLP:journals/jmlr/LuoKGHSRH05}), where the instances with the smallest margin between their top two most likely classification probabilities are selected, essentially ``breaking the tie'' between the two most likely classes. In other words, if $ \mathbf{p}_{j, k}^* $ denotes the probability of the $ k $-th most likely class label for the $ j $-th instance, then Breaking-Ties seeks to select instances where $ \mathbf{p}_{j, 1}^* - \mathbf{p}_{j, 2}^* $ is minimal.
 
-This approach resulted in two different implementation ideas: the first, which I will refer to as "Weighted Greedy Core-Set" (\ref{alg:wgc}), calculates the uncertainties prior to executing the standard Core-Set algorithm, then multiplies the resulting Core-Set distances and probabilities using weights (in this case, I used a 80-20 weighting in favour of the Core-Set distances). 
+This approach resulted in two different implementation ideas: the first, which I will refer to as ``Weighted Greedy Core-Set'' (\ref{alg:wgc}), calculates the uncertainties prior to executing the standard Core-Set algorithm, then multiplies the resulting Core-Set distances and probabilities using weights (in this case, I used a 80-20 weighting in favour of the Core-Set distances). 
 
 \begin{algorithm}
 \caption{Weighted k-Center-Greedy}%
@@ -253,7 +253,7 @@ This approach resulted in two different implementation ideas: the first, which I
 \end{algorithmic}
 \end{algorithm}
 
-The second, which I will call "Ranked Weighted Greedy Core-Set" (\ref{alg:rwgc}), opts to first compute a Core-Set twice the size of the original sample size $b$, then "re-ranks" the resulting distances according to Breaking-Ties uncertainties and finally selects the points with the $b$ highest uncertainties.
+The second, which I will call ``Ranked Weighted Greedy Core-Set'' (\ref{alg:rwgc}), opts to first compute a Core-Set twice the size of the original sample size $b$, then ``re-ranks'' the resulting distances according to Breaking-Ties uncertainties and finally selects the points with the $b$ highest uncertainties.
 
 \begin{algorithm}
 \caption{Re-ranked k-Center-Greedy}%
@@ -297,9 +297,28 @@ This experiment was conducted across three datasets commonly used in the field o
 
 For binary classification, I used \textbf{Movie Review}, a sentiment analysis dataset (\cite{DBLP:conf/acl/PangL05}) containing 5,331 positive and 5,331 negative samples. For multi-class text classification, \textbf{AG's News} (\cite{DBLP:conf/nips/ZhangZL15}), comprised of 120,000 training samples and 7,600 test samples, and \textbf{TREC} (\cite{DBLP:journals/nle/LiR06}), a question dataset containing 5,500 training samples and 500 test samples. The test set was only provided in the case of AG's News and TREC, in the case of Movie Review I employed a split of the 10,662 samples myself.
 
+% An example table; hint for 'cleaner' LaTeX files: move the table to a dedicated *.tex file named like the table label and then include it via \input{<table-label>}
+\begin{table}[p]% extra page (usually for large figures/tables)
+  \caption{Tables have their captions above, figures below.}
+  \label{table-with-numbers}%
+  \centering\small
+  \begin{tabular}{@{}lrrrr@{}} % use @{} to remove spacing; numbers should be right aligned
+    \toprule
+    % \multicolumn{4}{c}{\bfseries Some numbers}\\
+    % \midrule
+      \bfseries Dataset Name (ID) & \bfseries No. of classes & \bfseries Training & \bfseries Test & \bfseries Mean Instance Length \\
+    % \cmidrule(l){2-4} % cmidrule: A line from 2nd to 4th column, trimmed on the left hand side
+    \midrule
+      Movie Review (MR) & 2 & 9596 & 1066 & 114.16 \\
+      AG News (AGN) & 4 & 120,000 & 7600 &  236.41 \\
+      TREC-6 (TREC) & 6 & 5452 & 500 & 49.39 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \section{Experiment Setup}
 
-As mentioned earlier, setting t-SNE's hyperparameters and exploring the resulting differing reduction behaviours has been shown to often be necessary (\cite{wattenberg2016how}). \cite{vanHomepage} mentions that examining the resulting plots is one of the best ways to assess the quality of the visualizations, in addition to comparing the Kullback-Leibler divergences. 
+% As mentioned earlier, setting t-SNE's hyperparameters and exploring the resulting differing reduction behaviours has been shown to often be necessary (\cite{wattenberg2016how}). \cite{vanHomepage} mentions that examining the resulting plots is one of the best ways to assess the quality of the visualizations, in addition to comparing the Kullback-Leibler divergences. 
 
 % Below, I have demonstrated the effect of t-SNE on a training set of the MR dataset (\cite{DBLP:conf/acl/PangL05}) containing 9,596 samples with a feature dimension of 768. The reductions are completed using perplexity values of 5, 30, 50 and 100 with iteration counts of 1,000 and 5,000 respectively. Note that the samples have been embedded using BERT and then normalized prior to the dimensionality reductions.
 
@@ -417,6 +436,37 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \caption{%
 Final accuracy per dataset, model, and query strategy. We report the mean and standard deviation over five runs. The best result per dataset is printed in bold.}
 \label{table-results-acc}
+\end{table*}
+
+% MY NEW ACC TABLE
+\begin{table*}[h!]%
+\centering
+\fontsize{8pt}{9pt}\selectfont%
+\renewcommand{\tabcolsep}{4pt}%
+\begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
+\toprule
+\textbf{Dataset} & \textbf{Model} & \multicolumn{8}{c}{\textbf{Query Strategy}}\\
+\cmidrule{3-14} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE} & \multicolumn{2}{c}{\hspace*{4pt}WCS} & \multicolumn{2}{c}{\hspace*{4pt}RCS}\\
+\midrule
+
+\multirow{2}{*}{AGN}  & BERT & 0.884 & 0.004 & 0.889 & 0.01 & \bfseries 0.874 & \bfseries 0.012 & 0.881 & 0.01 & 0.873 & 0.011 & 0.785 & 0.221\\ 
+ & SetFit & 0.886 & 0.006 & \bfseries 0.902 & \bfseries 0.004 & 0.895 & 0.003 & 0.895 & 0.003 & 0.895 & 0.005 & 0.895 & 0.004 \\
+
+\midrule
+
+\multirow{2}{*}{MR}  & BERT & 0.806 & 0.011 & 0.815 & 0.009 & \bfseries 0.77 & \bfseries 0.015 & 0.796 & 0.02 & 0.806 & 0.014 & 0.811 & 0.013\\ 
+ & SetFit & 0.869 & 0.006 & \bfseries 0.88 & \bfseries 0.005 & 0.871 & 0.005 & 0.874 & 0.005 & 0.874 & 0.007 & 0.87 & 0.004 \\
+
+\midrule
+
+\multirow{2}{*}{TREC}  & BERT & 0.904 & 0.018 & 0.92 & 0.014 & \bfseries 0.902 & \bfseries 0.021 & 0.912 & 0.009 & 0.897 & 0.027 & 0.897 & 0.036\\ 
+ & SetFit & 0.945 & 0.004 & \bfseries 0.954 & \bfseries 0.006 & 0.962 & 0.004 & 0.957 & 0.007 & 0.966 & 0.004 & 0.962 & 0.003 \\
+ 
+\bottomrule
+\end{tabular}
+\caption{%
+Final accuracy per dataset, model, and query strategy. We report the mean and standard deviation over five runs. The best result per dataset is printed in bold.}
+\label{table-results-acc-1}
 \end{table*}
 
 % MY AUC TABLE
