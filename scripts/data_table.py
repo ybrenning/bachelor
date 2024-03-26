@@ -14,6 +14,8 @@ def dataset_stats(name):
         print("Full size", len(full_dataset))
         print("Train", len(train))
         print("Test", len(dataset["test"]["text"]))
+        print(dataset["train"]["text"][1])
+        print(dataset["train"]["label"][1])
     else:
         full_dataset = concatenate_datasets(
             [dataset['train'], dataset['test']]
@@ -21,6 +23,11 @@ def dataset_stats(name):
         print("Full size", len(full_dataset))
         print("Train", len(dataset["train"]["text"]))
         print("Test", len(dataset["test"]["text"]))
+        print(dataset["train"]["text"][0])
+        if name == "trec":
+            print(dataset["train"]["coarse_label"][0])
+        else:
+            print(dataset["train"]["label"][0])
 
     ds = np.array(full_dataset)
 
@@ -32,6 +39,6 @@ def dataset_stats(name):
 
 
 if __name__ == "__main__":
-    dataset_stats("rotten_tomatoes")
-    dataset_stats("ag_news")
+    # dataset_stats("rotten_tomatoes")
+    # dataset_stats("ag_news")
     dataset_stats("trec")
