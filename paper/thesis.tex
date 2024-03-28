@@ -148,7 +148,9 @@ In the case of membership query synthesis, a membership query is created in the 
 
 Stream-based selective sampling, on the other hand, typically examines each unlabelled instance one at a time and decides whether to query the oracle or to assign a label (\cite{settles.tr09}).
 
-Finally, we consider the pool-based approach as one of the commonly known applications of AL. This scenario assumes a large set of unlabelled instances and a small set of labelled instaces, from which queries can be selectively drawn using a \textit{query strategy}. The key difference to the stream-based approach is that pool-based learning considers the entire collection and attempts to select the most informative instances, as opposed to making individual query decisions. This can be useful in many real-world problems where plenty of unlabelled data is available and the pool is assumed to be closed (though this is not necessarily always the case) (\cite{settles.tr09}).
+Finally, we consider the pool-based approach as one of the commonly known applications of AL. This scenario assumes a large set of unlabelled instances and a small set of labelled instaces, from which queries can be selectively drawn using a \textit{query strategy}. Generally, most approaches begin with some random selection of points to initialize the classifier. With each AL iteration, the query strategy selects new instances on which to train the classifier. This process is then repeated until some stopping criterion is met. 
+
+The key difference to the stream-based approach is that pool-based learning considers the entire collection and attempts to select the most informative instances, as opposed to making individual query decisions. This can be useful in many real-world problems where plenty of unlabelled data is available and the pool is assumed to be closed (though this is not necessarily always the case) (\cite{settles.tr09}).
 
 This thesis considers the case of the pool-based scenario, as does the original Core-Set paper. It is worth mentioning however, that Core-Set has also been applied in the stream-based context (\cite{DBLP:conf/icml/SaranYK0A23}).
 
@@ -189,7 +191,7 @@ This problem has been shown to be NP-hard (\cite{DBLP:journals/dam/HsuN79}, \cit
 \end{algorithmic}
 \end{algorithm}
 
-The original paper by \cite{DBLP:conf/iclr/SenerS18} attempts to further improve the robustness of this approximation by placing an upper limit on the number of outliers that can be selected. This thesis will be focusing on and using the regular k-Center greedy algorithm for ease of implementation and interpretability. (?)
+The original paper by \cite{DBLP:conf/iclr/SenerS18} attempts to further improve the robustness of this approximation by placing an upper limit on the number of outliers that can be selected. This thesis will be focusing on and using the regular k-Center greedy algorithm, which is generally more established due to ease of implementation and interpretability.
 
 \section{Dimensionality Reduction}
 
@@ -288,6 +290,27 @@ The second, which I will call ``Ranked Weighted Greedy Core-Set'' (\ref{alg:rwgc
 
 Finally, I will take into account the class distributions within each Core-Set and select points based on the representation of each class.
 
+\begin{algorithm}
+    \caption{Class-Balanced k-Center Greedy}%
+\makeatletter\def\@currentlabel{CB-CS}\makeatother
+\label{alg:classbalanced}
+\begin{algorithmic}
+
+
+\Require data $ \mathbf{x}_i $, existing pool $ \mathbf{s}^0 $, budget $ b $, class labels $ y_i $, classes $ C $
+\State Initialize $ \mathbf{s} = \mathbf{s}^0 $
+\For{$c \in C$}
+\State \texttt{<do stuff>}
+\EndFor
+\Repeat
+\State $ u = \text{argmax}_{i \in [n] \setminus \mathbf{s}} \text{min}_{j \in \mathbf{s}} \Delta(\mathbf{x}_i, \mathbf{x}_j) $
+\State $ \mathbf{s} = \mathbf{s} \cup \{u\} $
+\Until{$ |\mathbf{s}| = b + |\mathbf{s}^0|$}
+
+\State \textbf{return} $\mathbf{s} \setminus \mathbf{s}^0 $
+\end{algorithmic}
+\end{algorithm}
+
 The experiment will be conducted with two models on three well-known classification datasets and will measure the performances throughout 5 runs per combination. 
 
 \chapter{Experiment}
@@ -302,7 +325,7 @@ For binary classification, I used \textbf{Movie Review}, a sentiment analysis da
 % An example table; hint for 'cleaner' LaTeX files: move the table to a dedicated *.tex file named like the table label and then include it via \input{<table-label>}
 \begin{table}[p]% extra page (usually for large figures/tables)
     \centering
-    \setlength{\tabcolsep}{10pt} % Adjust the spacing between columns
+    \setlength{\tabcolsep}{16pt} % Adjust the spacing between columns
     \begin{tabular}{@{}lrrrr@{}} % use @{} to remove spacing; numbers should be right aligned
         \toprule
         % \multicolumn{4}{c}{\bfseries Some numbers}\\
@@ -321,7 +344,7 @@ For binary classification, I used \textbf{Movie Review}, a sentiment analysis da
 
 \begin{table}[htbp]
     \centering
-    \renewcommand{\arraystretch}{1.5} % Increase the spacing between rows by a factor of 1.5
+    \renewcommand{\arraystretch}{1.5}
     \begin{tabular}{@{}lrp{7cm}@{}} 
         \toprule
         \textbf{Dataset Name} \scriptsize (ID) & \textbf{Class} & \textbf{Example Instance} \\
@@ -331,7 +354,7 @@ For binary classification, I used \textbf{Movie Review}, a sentiment analysis da
         TREC \scriptsize (TREC) & 2 ('DESC') & \texttt{How did serfdom develop in and then leave Russia ?} \\
         \bottomrule
     \end{tabular}
-    \caption{Examples of instances and their corresponding labels from each dataset.}
+    \caption{Examples of instances and their corresponding labels from each dataset. The example label 'DESC' signifies a description or abstract concept.}
     \label{tab:dataset-instances}
 \end{table}
 
