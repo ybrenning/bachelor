@@ -28,7 +28,7 @@
 % Supervisors should usually be Professors from the candidate's university. A second supervisor is not always needed. 
 \ThesisSetSupervisors{Christopher Schröder, Christian Kahmann}
 
-\ThesisSetSubmissionDate{21}{4}{2024}
+\ThesisSetSubmissionDate{26}{4}{2024}
 
 %
 % Suggested Packages
@@ -58,6 +58,7 @@
 \usepackage{multirow}
 \usepackage{pdfpages}
 \usepackage{pbox}
+\usepackage{rotating}
 \usepackage{graphicx}
 
 %
@@ -65,6 +66,7 @@
 % -------------------------------
 \usepackage{xcolor}
 \usepackage{soul}
+\usepackage[width=1\textwidth]{caption}
 \newcommand{\bscom}[2]{%
   % #1 Original text.
   % #2 Replacement text.
@@ -288,7 +290,15 @@ The second, which I will call ``Ranked Weighted Greedy Core-Set'' (\ref{alg:rwgc
 \end{algorithm}
 \noindent Where $ \mathbf{p}_{j, k}^* $ denotes the probability of the $ k $-th most likely class label for the $ j $-th instance 
 
-Finally, I will take into account the class distributions within each Core-Set and select points based on the representation of each class.
+Finally, I will take into account the class distributions within each Core-Set and select points based on the representation of each class. This approach will be called ``Class-Balanced Core-Set'' (\ref{alg:classbalanced}).
+
+The idea with this approach is that the class distribution within our pool of labelled instances should, in theory, reflect the underlying class distribution of the entire dataset. In other words, the query strategy (in this case Core-Set) should attempt to select more or less instances of a certain class depending on the discrepancy between the class distribution of the labelled pool and the ``real'' distribution of that class.
+
+To this end, I will divide a single query into multiple Core-Set computations, essentially constructing disjunct Core-Set selections for each class. For each class' Core-Set selection, the budget $ b $ (e.g. the amount of selected instances from this class) will depend on the desired class distribution.
+
+First, the class distributions of the model's predictions and of the true labels are used to determine how many instances should ideally be queried for each class in order to achieve a ``balance'' in the labelled pool. Then, $k$-Center-greedy is used to select the desired amount of points of each class, such that if $ k_i $ denotes the amount of newly selected instances for the $ i $th class, then $ \sum_{i \in C} k_i = k $. 
+
+In the corresponding pseudocode (\ref{alg:classbalanced}), I did not include an additional code block for this calculation, which has instead been denoted by the use of \texttt{target\textunderscore dist}. For the implementation, I used existing methods from the Python library Small-Text (\cite{schroeder2023small-text}).
 
 \begin{algorithm}
     \caption{Class-Balanced k-Center Greedy}%
@@ -296,9 +306,9 @@ Finally, I will take into account the class distributions within each Core-Set a
 \label{alg:classbalanced}
 \begin{algorithmic}
 
-
-\Require data $ \mathbf{x}_i $, existing pool $ \mathbf{s}^0 $, budget $ b $, class labels $ y_i $, classes $ C $
+\Require $ \mathbf{x}_i $, $ \mathbf{s}^0 $, $ b $, true class labels $ y_i $, predicted class labels $ y^{pred}_i $ classes $ C $
 \State Initialize $ \mathbf{s} = \mathbf{s}^0 $
+\State $ d = \text{target\textunderscore dist}_{i \in [n] \setminus \mathbf{s}} (y_i, y^{pred}_i, C) $
 \For{$c \in C$}
 \State \texttt{<do stuff>}
 \EndFor
@@ -317,9 +327,9 @@ The experiment will be conducted with two models on three well-known classificat
 
 \section{Data}
 
-This experiment was conducted across three datasets commonly used in the field of text classification. These datasets are of three different types: sentiment analysis (S), questions (Q), and news (N). 
+This experiment was conducted across three datasets commonly used in the field of text classification. These datasets are of three different types: sentiment analysis, questions, and news. 
 
-For binary classification, I used \textbf{Movie Review}, a sentiment analysis dataset (\cite{DBLP:conf/acl/PangL05}) containing 5,331 positive and 5,331 negative samples. For multi-class text classification, \textbf{AG's News} (\cite{DBLP:conf/nips/ZhangZL15}), comprised of 120,000 training samples and 7,600 test samples, and \textbf{TREC} (\cite{DBLP:journals/nle/LiR06}), a question dataset containing 5,500 training samples and 500 test samples. The test set was only provided in the case of AG's News and TREC, in the case of Movie Review I employed a split of the 10,662 samples myself.
+For binary classification, I used \textbf{Movie Review}, a sentiment analysis dataset (\cite{DBLP:conf/acl/PangL05}) containing 5,331 positive and 5,331 negative online movie reviews. For multi-class text classification, I performed the AL on \textbf{AG's News} (\cite{DBLP:conf/nips/ZhangZL15}), a news dataset comprised of 120,000 training samples and 7,600 test samples, and \textbf{TREC} (\cite{DBLP:journals/nle/LiR06}), a question dataset containing 5,500 training samples and 500 test samples. The test set was provided in the case of AG's News and TREC, in the case of Movie Review I employed a split of the 10,662 samples myself, which can be seen alongside additional information in \ref{tab:dataset-table}. Example instances from each dataset as well as their corresponding classes can also be seen in \ref{tab:dataset-instances}.
 
 
 % An example table; hint for 'cleaner' LaTeX files: move the table to a dedicated *.tex file named like the table label and then include it via \input{<table-label>}
@@ -330,7 +340,7 @@ For binary classification, I used \textbf{Movie Review}, a sentiment analysis da
         \toprule
         % \multicolumn{4}{c}{\bfseries Some numbers}\\
         % \midrule
-        \bfseries Dataset Name \scriptsize (ID) & \bfseries Classes & \bfseries Train & \bfseries Test & \bfseries MIL (*) \\
+        \bfseries Dataset Name \scriptsize (ID) & \bfseries Classes & \bfseries Train & \bfseries Test & \bfseries MNC (*) \\
         % \cmidrule(l){2-4} % cmidrule: A line from 2nd to 4th column, trimmed on the left hand side
         \midrule
         Movie Review \scriptsize (MR) & 2 & 9,596 & 1,066 & 114.16 \\
@@ -338,8 +348,8 @@ For binary classification, I used \textbf{Movie Review}, a sentiment analysis da
         TREC \scriptsize (TREC) & 6 & 5,452 & 500 & 49.39 \\
         \bottomrule
     \end{tabular}
-    \caption{Information on the different datasets. (*) Mean Instance Length, refers to the mean number of characters in a single instance.}
-  \label{dataset-table}%
+    \caption{Information on the different datasets. (*) Mean number of characters in a single instance.}
+  \label{tab:dataset-table}%
 \end{table}
 
 \begin{table}[htbp]
@@ -401,7 +411,9 @@ For binary classification, I used \textbf{Movie Review}, a sentiment analysis da
 
 I have chosen two state-of-the-art transformers, BERT (\cite{DBLP:conf/naacl/DevlinCLT19}) and SetFit (\cite{DBLP:setfit}) to fine-tune as models for this experiment. BERT is an established language model pre-trained on 3,300M english words. It uses bidirectional self-attention in order to incorporate context from both directions of a given token, unlike many previous context-sensitive approaches which only considered a single direction. For this experiment, I will be using BERT\textsubscript{BASE}, which consists of 12 layers, hidden units of size 768 with 110M parameters in total. SetFit, on the other hand, is based on sentence transformers (\cite{DBLP:conf/emnlp/ReimersG19}) which are then fine-tuned in a contrastive manner.
 
-The experiment is conducted by performing 20 queries on 25 instances, with a validation set size of 10\%. The results will be averaged over five runs of queries per combination of dataset, model and query strategy. Alongside the original Core-Set, I will be comparing my different approaches with Random Sampling (RS) and Breaking-Ties (BT). RS offers a good view of a baseline performance and will be interesting when compared to Core-Set. BT, on the other hand, may serve as a good upper bound when looking at improving Core-Set's performance. 
+The experiment is conducted by performing 20 queries on 25 instances, with a validation set size of 10\%. The results will be averaged over five runs of queries per combination of dataset, model and query strategy. The training and evaluation of these models is run using an AL-Experiment Setup based on the Python library Small-Text (\cite{schroeder2023small-text}).
+
+Alongside the original Core-Set, I will be comparing my different approaches with Random Sampling (RS) and Breaking-Ties (BT). RS offers a good view of a baseline performance and will be interesting when compared to Core-Set. BT, on the other hand, may serve as a good upper bound when looking at improving Core-Set's performance. 
 
 
 \section{Experiment Results}
@@ -411,14 +423,14 @@ The following figures show the learning curves for each combination of dataset, 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=1\textwidth]{img/bert-plots-1.png}
-    \caption{Active Learning curves of BERT on each dataset when combined with six query strategies: Random Sampling (RS), Breaking-Ties (BT), Greedy Core-Set (CS), Greedy Core-Set with t-SNE (CS-TSNE), Weighted Greedy Core-Set (WCS), and Ranked Weighted Greedy Core-Set (RWCS). The line represents the mean accuracy and the surrounding tubes represent the standard deviation over five runs.}
+    \caption{Active Learning curves of BERT on each dataset when combined with seven query strategies: Random Sampling, Breaking-Ties, Greedy Core-Set, Greedy Core-Set with t-SNE, Weighted Greedy Core-Set, Re-ranked Greedy Core-Set and Class-Balanced Core-Set. The lines represent the mean accuracy and the surrounding tubes represent the standard deviation over five runs.}
     \label{fig:bert-curves}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=1\textwidth]{img/setfit-plots-1.png}
-    \caption{Active Learning curves of SetFit on each dataset when combined with six query strategies: Random Sampling (RS), Breaking-Ties (BT), Greedy Core-Set (CS), Greedy Core-Set with t-SNE (CS-TSNE), Weighted Greedy Core-Set (WCS), and Ranked Weighted Greedy Core-Set (RWCS). The line represents the mean accuracy and the surrounding tubes represent the standard deviation over five runs.}
+    \caption{Active Learning curves of SetFit on each dataset when combined with seven query strategies: Random Sampling, Breaking-Ties, Greedy Core-Set, Greedy Core-Set with t-SNE, Weighted Greedy Core-Set, Re-ranked Greedy Core-Set and Class-Balanced Core-Set. The lines represent the mean accuracy and the surrounding tubes represent the standard deviation over five runs.}
     \label{fig:setfit-curves}
 \end{figure}
 
@@ -449,105 +461,93 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \end{table*}
 \fi
 
-% MY ACC TABLE
-\begin{table*}[h!]%
+% NEW TABLES
+\begin{sidewaystable}
+
 \centering
 \fontsize{8pt}{9pt}\selectfont%
-\renewcommand{\tabcolsep}{4pt}%
-\begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
+\renewcommand{\tabcolsep}{6pt}%
+\begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$}r @{}}
 \toprule
 \textbf{Dataset} & \textbf{Model} & \multicolumn{8}{c}{\textbf{Query Strategy}}\\
-\cmidrule{3-14} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE} & \multicolumn{2}{c}{\hspace*{4pt}WCS} & \multicolumn{2}{c}{\hspace*{4pt}RCS}\\
+\cmidrule{3-16} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE} & \multicolumn{2}{c}{\hspace*{4pt}WCS} & \multicolumn{2}{c}{\hspace*{4pt}RCS} & \multicolumn{2}{c}{\hspace*{4pt}CS-CB}\\
 \midrule
 
-\multirow{2}{*}{AGN}  & BERT & 0.884 & 0.004 & \bfseries 0.889 & \bfseries 0.010 &  0.874 & 0.012 & 0.881 & 0.010 & 0.873 & 0.011 & 0.873 & 0.022\\ 
- & SetFit & 0.886 & 0.006 & 0.902 & 0.004 & 0.895 & 0.003 & 0.895 & 0.003 & 0.895 & 0.005 & \bfseries 0.908 & \bfseries 0.002 \\
+\multirow{2}{*}{AGN}  & BERT & 0.884 & 0.004 & \bfseries 0.889 & \bfseries 0.010 & 0.874 & 0.012 & 0.881 & 0.010 & 0.873 & 0.011 & 0.785 & 0.221 & 0.866 & 0.016\\ 
+ & SetFit & 0.886 & 0.006 & \bfseries 0.902 & \bfseries 0.004 & 0.895 & 0.003 & 0.895 & 0.003 & 0.895 & 0.005 & 0.895 & 0.004 & 0.898 & 0.006 \\
+
+\multirow{2}{*}{MR}  & BERT & 0.806 & 0.011 & \bfseries 0.815 & \bfseries 0.009 & 0.770 & 0.015 & 0.796 & 0.02 & 0.806 & 0.014 & 0.811 & 0.013 & 0.793 & 0.021\\ 
+ & SetFit & 0.869 & 0.006 & \bfseries 0.880 & \bfseries 0.005 & 0.871 & 0.005 & 0.874 & 0.005 & 0.874 & 0.007 & 0.870 & 0.004 & 0.870 & 0.006 \\
  
-\midrule
- 
-\multirow{2}{*}{MR}  & BERT & 0.806 & 0.011 & 0.815 & 0.009 & 0.77 & 0.015 & 0.796 & 0.020 & 0.806 & 0.014 & \bfseries 0.817 & \bfseries 0.010\\ 
- & SetFit & 0.869 & 0.006 & 0.88 & 0.005 & 0.871 & 0.005 & 0.874 & 0.005 & 0.874 & 0.007 & \bfseries 0.884 & \bfseries 0.005 \\
-
-\midrule
-
-\multirow{2}{*}{TREC}  & BERT & 0.904 & 0.018 & 0.92 & 0.014 &  0.902 & 0.021 & 0.912 & 0.009 & 0.897 & 0.027 & \bfseries 0.951 & \bfseries 0.008\\ 
- & SetFit & 0.945 & 0.004 & 0.954 & 0.006 & 0.962 & 0.004 & 0.957 & 0.007 & 0.966 & 0.004 & \bfseries 0.972 & \bfseries 0.003 \\
+\multirow{2}{*}{TREC}  & BERT & 0.904 & 0.018 & \bfseries 0.920 & \bfseries 0.014 & 0.902 & 0.021 & 0.912 & 0.009 & 0.897 & 0.027 & 0.897 & 0.036 & 0.872 & 0.048\\ 
+ & SetFit & 0.945 & 0.004 & 0.954 & 0.006 & 0.962 & 0.004 & 0.957 & 0.007 & \bfseries 0.966 & 0.004 & 0.962 & 0.003 & 0.956 & 0.007 \\
  
 \bottomrule
 \end{tabular}
+
 \caption{%
 Final accuracy per dataset, model, and query strategy. We report the mean and standard deviation over five runs. The best result per dataset is printed in bold.}
 \label{table-results-acc}
-\end{table*}
 
-% MY NEW ACC TABLE
-\begin{table*}[h!]%
+\vspace{2\baselineskip}
+
 \centering
 \fontsize{8pt}{9pt}\selectfont%
-\renewcommand{\tabcolsep}{4pt}%
-\begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
+\renewcommand{\tabcolsep}{6pt}%
+\begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
 \toprule
 \textbf{Dataset} & \textbf{Model} & \multicolumn{8}{c}{\textbf{Query Strategy}}\\
-\cmidrule{3-14} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE} & \multicolumn{2}{c}{\hspace*{4pt}WCS} & \multicolumn{2}{c}{\hspace*{4pt}RCS}\\
+\cmidrule{3-16} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE} & \multicolumn{2}{c}{\hspace*{4pt}WCS} & \multicolumn{2}{c}{\hspace*{4pt}RCS} & \multicolumn{2}{c}{\hspace*{4pt}CS-CB}\\
 \midrule
 
-\multirow{2}{*}{AGN}  & BERT & 0.884 & 0.004 & 0.889 & 0.01 & \bfseries 0.874 & \bfseries 0.012 & 0.881 & 0.01 & 0.873 & 0.011 & 0.785 & 0.221\\ 
- & SetFit & 0.886 & 0.006 & \bfseries 0.902 & \bfseries 0.004 & 0.895 & 0.003 & 0.895 & 0.003 & 0.895 & 0.005 & 0.895 & 0.004 \\
+\multirow{2}{*}{AGN}  & BERT & 0.790 & 0.015 & \bfseries 0.800 & \bfseries 0.009 & 0.735 & 0.020 & 0.792 & 0.007 & 0.731 & 0.014 & 0.741 & 0.015 & 0.733 & 0.017\\ 
+ & SetFit & 0.865 & 0.007 & \bfseries 0.881 & \bfseries 0.004 & 0.871 & 0.005 & 0.875 & 0.004 & 0.870 & 0.003 & 0.870 & 0.002 & 0.873 & 0.003 \\
 
-\midrule
-
-\multirow{2}{*}{MR}  & BERT & 0.806 & 0.011 & 0.815 & 0.009 & \bfseries 0.77 & \bfseries 0.015 & 0.796 & 0.02 & 0.806 & 0.014 & 0.811 & 0.013\\ 
- & SetFit & 0.869 & 0.006 & \bfseries 0.88 & \bfseries 0.005 & 0.871 & 0.005 & 0.874 & 0.005 & 0.874 & 0.007 & 0.87 & 0.004 \\
-
-\midrule
-
-\multirow{2}{*}{TREC}  & BERT & 0.904 & 0.018 & 0.92 & 0.014 & \bfseries 0.902 & \bfseries 0.021 & 0.912 & 0.009 & 0.897 & 0.027 & 0.897 & 0.036\\ 
- & SetFit & 0.945 & 0.004 & \bfseries 0.954 & \bfseries 0.006 & 0.962 & 0.004 & 0.957 & 0.007 & 0.966 & 0.004 & 0.962 & 0.003 \\
+\multirow{2}{*}{MR}  & BERT & \bfseries 0.750 & \bfseries 0.007 & 0.746 & 0.011 & 0.718 & 0.009 & 0.741 & 0.017 & 0.720 & 0.004 & 0.718 & 0.005 & 0.706 & 0.015\\ 
+ & SetFit & 0.854 & 0.002 & \bfseries 0.864 & \bfseries 0.005 & 0.856 & 0.003 & 0.862 & 0.003 & 0.858 & 0.007 & 0.857 & 0.003 & 0.859 & 0.002 \\
+ 
+\multirow{2}{*}{TREC}  & BERT & 0.674 & 0.029 & \bfseries 0.709 & \bfseries 0.008 & 0.594 & 0.022 & 0.676 & 0.037 & 0.629 & 0.024 & 0.624 & 0.012 & 0.598 & 0.025\\ 
+ & SetFit & 0.914 & 0.011 & \bfseries 0.923 & \bfseries 0.007 & 0.896 & 0.015 & 0.919 & 0.005 & 0.893 & 0.012 & 0.897 & 0.012 & 0.905 & 0.010 \\
  
 \bottomrule
 \end{tabular}
-\caption{%
-Final accuracy per dataset, model, and query strategy. We report the mean and standard deviation over five runs. The best result per dataset is printed in bold.}
-\label{table-results-acc-1}
-\end{table*}
 
-% MY AUC TABLE
-\begin{table*}[!t]%
-\centering
-\fontsize{8pt}{9pt}\selectfont%
-\renewcommand{\tabcolsep}{4pt}%
-\begin{tabular}{@{}ll@{\hspace{10pt}} r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r r @{${}\pm{}$} r @{}}
-\toprule
-\textbf{Dataset} & \textbf{Model} & \multicolumn{8}{c}{\textbf{Query Strategy}}\\
-\cmidrule{3-14} & & \multicolumn{2}{c}{\hspace*{-6pt}RS} & \multicolumn{2}{c}{BT} & \multicolumn{2}{c}{CS} & \multicolumn{2}{c}{\hspace*{4pt}CS-TSNE} & \multicolumn{2}{c}{\hspace*{4pt}WCS} & \multicolumn{2}{c}{\hspace*{4pt}RCS}\\
-\midrule
-
-\multirow{2}{*}{AGN}  & BERT & 0.790 & 0.015 & 0.800 & 0.009 & 0.735 & 0.020 & 0.792 & 0.007 & 0.731 & 0.014 & \bfseries 0.805 & \bfseries 0.010\\ 
- & SetFit & 0.865 & 0.007 & 0.881 & 0.004 & 0.871 & 0.005 & 0.875 & 0.004 & 0.87 & 0.003 & \bfseries 0.884 & \bfseries 0.002 \\
-
-\midrule
-
-\multirow{2}{*}{MR}  & BERT & 0.750 & 0.007 & 0.746 & 0.011 & 0.718 & 0.009 & 0.741 & 0.017 & 0.720 & 0.004 & \bfseries 0.759 & \bfseries 0.007\\ 
- & SetFit & 0.854 & 0.002 & 0.864 & 0.005 & 0.856 & 0.003 & 0.862 & 0.003 & 0.858 & 0.007 & \bfseries 0.866 & \bfseries 0.003 \\
-
-\midrule
-
-\multirow{2}{*}{TREC}  & BERT & 0.674 & 0.029 & 0.709 & 0.008 & 0.594 & 0.022 & 0.676 & 0.037 & 0.629 & 0.024 & \bfseries 0.771 & \bfseries 0.021\\ 
- & SetFit & 0.914 & 0.011 & \bfseries 0.923 & \bfseries 0.007 & 0.896 & 0.015 & 0.919 & 0.005 & 0.893 & 0.012 & 0.918 & 0.015 \\
- 
-\bottomrule
-\end{tabular}
 \caption{Final AUC per dataset, model, and query strategy. We report the mean and standard deviation over five runs. The best result per dataset is printed in bold.}
 \label{table-results-auc}
-\end{table*}
 
-The SetFit learning curves generally outperform the BERT model and seem to show much less variation between the different query strategies. When looking at the query strategies, we can see that specifically in the case of BERT, Core-Set seems to underperform especially in earlier iterations, even when compared to RS. This further reinforces the sentiment that Core-Set has its weaknesses when considering the task of text classification. We can see that in most cases, the three variations of Core-Set seem to be on par with or more performant than the original Core-Set. Even so, BT looks to be a strong contender in all cases and manages to perform similarly or better than CS-TSNE and WCS. The largest difference can be seen on the TREC-6 dataset, with RWCS outperforming all other strategies.
+\end{sidewaystable}
 
-In \ref{table-results-acc}, I show the reported mean accuracy and standard deviation for each combination of dataset, model and query strategy. The results show small improvements in accuracy for the dimensionality reduction approach, as well as Weighted Core-Set. However, the Ranked-Weighted Core-Set approach achieves the highest accuracy in almost all instances, being outperformed only on the AG-News dataset with BERT by the Breaking-Ties strategy.
+The SetFit learning curves generally outperform the BERT model and seem to show much less variation between the different query strategies. Even in the case of the AL curves with BERT, accuracy differences seem to mainly occur in early iterations. By the final iteration, the mean accuracy scores of the different strategies tend to lie in a similar range. 
 
-\ref{table-results-auc} contains the reported mean AUC (area under curve) and standard deviation for each combination of dataset, model and query strategy. The top performing AUC results, similarly to the accuracy table, show RWCS as having the best results in almost all cases. 
+I will first compare and contrast the different results for the training of the BERT model (\ref{fig:bert-curves}). 
 
-As also made evident by the learning curves earlier, the accuracy and AUC improvements are most drastic in the case of BERT on the TREC dataset, where RWCS achieves an improvement in Core-Set's mean accuracy of 4.9 percent, and an improvement in AUC of 17.7 percent.
+In the case of AGN and TREC, we can clearly see the curve of Breaking-Ties achieve a higher performance throughout. However, CS-TSNE is able to compete very closely on AGN. Interestingly enough, Random Sampling has managed to achieve similar scores in these cases to the strategies mentioned previously.
+
+When comparing the curves of the different query strategies, we can see that specifically in the case of BERT, Core-Set does indeed seem to underperform. This is mainly noticeable when looking at the earlier iterations (from queries 1 to 10). This underperformance becomes even more apparent when considering the fact that the learning curves of Random Sampling are consistently above those of Core-Set. This further reinforces the sentiment that Core-Set may have weaknesses within the domain of text classification. 
+
+We can see that in most cases, the different variations of Core-Set seem to be on par with or more performant than the original Core-Set. Especially Breaking-Ties looks to be a strong contender in all cases and manages to perform similarly to or better than Core-Set and its variants.
+
+Class-Balanced Core-Set, on the other hand, does not seem to show significant accuracy improvements during training in comparison to the regular Core-Set approach. The final results of the respective curves do seem to slightly favour CB-CS over CS. Generally, the two strategies' learning curves show a very similar trend across all three datasets. 
+
+Weighted Core-Set and Re-ranked Core-Set are in a similar vein to, albeit generally slightly above, the Class-Balanced approach. Both curves fluctuate around the same level or slightly higher than CS, but do not manage to surpass the baseline approaches in early iterations.
+
+The SetFit learning curves (\ref{fig:setfit-curves}) show much less fluctuation throughout the individual learning curves, as well as smaller discrepancies between the different query strategies during training. 
+
+In the case of MR, all strategies have very similar accuracy curves and bundle tightly around the final iterations. As for AGN and TREC, the margins between the curves are slightly wider, and some differences can be noted when comparing approaches. Again, Breaking-Ties stands out as one of the best strategies, with CS-TSNE generally following a similar trend. In contrast to BERT, CS itself does not seem to underperform in any significant way. Additionally, Random Sampling's accuracy values stay visibly below those of the other query strategies in the second half of each run when considering AGN and TREC.
+
+In \ref{table-results-acc}, I show the reported mean final accuracy across all runs, as well as the standard deviation for each combination of dataset, model and query strategy. Overall, Breaking-Ties dominates for almost every dataset on both models. Only for SetFit does another strategy achieve the highest overall final mean accuracy. Furthermore, we can see that RS outperforms CS when used with BERT throughout all datasets.
+
+However, the results still show small improvements in accuracy for many of the Core-Set variation's results. CS-TSNE most notably shows slightly higher scores than CS in almost all cases, the one exception being TREC with SetFit. 
+
+Although WCS does have the best result in the case of the TREC dataset with SetFit, the remaining results in its column do not show consistent improvements when compared to CS. A similar sentiment applies to RCS and CS-CB, whose results in comparison to CS seem to be a mixed bag. 
+
+Even so, all of the CS variations also show some kind of improvement in the case of MR with BERT, in which CS has the lowest accuracy overall. Notably, AGN is the only dataset where CS-TSNE, WCS and RCS do not have any impact on the accuracy score in the case of SetFit.
+
+\ref{table-results-auc} contains the reported mean AUC (area under curve) and the corresponding standard deviation for each combination of dataset, model and query strategy. The top performing AUC results, similarly to the accuracy table, show BT as having the best results in almost all cases. Unexpectedly, RS manages to reach the highest AUC among all query strategies in the case of MR with BERT.
+
+Again, the CS variations offer some minor improvements in many cases. Here, the similarity between the curves of CS, WCS, RCS and CB-CS becomes more apparent, as the values of these strategies are almost equal in most cases. Nonetheless, CS-TSNE shows higher AUC values than CS across the board. 
+
+As also made evident by the learning curves earlier, the differences in AUC are most drastic in the case of BERT on the TREC dataset.
 
 \chapter{Discussion}
 
