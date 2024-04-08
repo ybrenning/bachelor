@@ -105,13 +105,13 @@ Oftentimes, there is a large amount of unlabelled available data for an AL model
 
 One attempt at improving the effectiveness of AL in this regard is the Core-Set approach (\cite{DBLP:conf/iclr/SenerS18}) This method uses core-set selection to counter the issue of AL ineffectiveness on convolutional neural networks. The proposed approach selects a set of points the pool such that a model learning over this subset can be consistent when provided the remaining data points. The method was shown to have improved results when compared to other approaches in the field of computer vision (\cite{DBLP:conf/iclr/SenerS18}, \cite{DBLP:conf/cvpr/CaramalauBK21}), which encompasses tasks that focus on enabling computers to interpret and understand visual information from the world. This field involves a variety of different methods including image classification, object detection, and semantic segmentation, all of which have significant importance in scientific research, classification tasks, and pattern recognition.
 
-However, Core-Set has been shown to have mixed results in cases of text classification using BERT (\cite{DBLP:conf/kdd/0002MM21}, \cite{DBLP:conf/emnlp/Ein-DorHGSDCDAK20}) and binary text classification using DNNs (\cite{DBLP:conf/cikm/Liu0LZW21}). Particularly in the first case, the experiments show that Core-Set performs poorly even when compared to the random sampling strategy. In addition, the approach has even been shown to be less effective in computer vision tasks in cases with higher numbers of classes as well as higher-dimensional data points (\cite{DBLP:conf/iccv/SinhaED19}). The theoretical analysis shown in \cite{DBLP:conf/iclr/SenerS18} briefly mentions this within the context of higher class amounts, however it does not attempt to provide a potential solution to the problem.
+However, Core-Set has been shown to have mixed results in cases of text classification using BERT (\cite{DBLP:conf/kdd/0002MM21}, \cite{DBLP:conf/emnlp/Ein-DorHGSDCDAK20}) and binary text classification using DNNs (\cite{DBLP:conf/cikm/Liu0LZW21}). Particularly in the first case, the experiments show that Core-Set performs poorly even when compared to the random sampling strategy. In addition, the approach has even been shown to be less effective in computer vision tasks in cases with higher numbers of classes as well as higher-dimensional data points (\cite{DBLP:conf/iccv/SinhaED19}). The theoretical analysis shown in \cite{DBLP:conf/iclr/SenerS18} briefly mentions this within the context of higher class numbers, however it does not attempt to provide a potential solution to the problem.
 
 % Particularly in first case, the experiments conducted on the Internal Dataset and TREC-6 show that Core-Set performs poorly when comparing the F1-scores to the random sampling strategy. 
 
-This thesis aims to explore the possibility of improving the Core-Set approach for text classification tasks. By first explaining Core-Set's functionality and the theoretical reasons for why it tends to underperform in certain classification tasks, I aim to then demonstrate the performance difference in comparison to various baseline approaches on large datasets of text content in order to verify this claim. Furthermore, this thesis looks to modify and attempt to improve the Core-Set approach within the context of text classification tasks and demonstrate the results of these modifications as a part of its experiment.
+This thesis aims to explore the possibility of improving the Core-Set approach for text classification tasks. By first explaining Core-Set's functionality and the possible reasons for why it tends to underperform in certain classification tasks, I aim to then examine the performance of Core-Set in comparison to various baseline approaches on large datasets of text content in order to verify this claim. Furthermore, this thesis looks to modify and attempt to improve the Core-Set approach within the context of text classification tasks and demonstrate the results of these modifications as a part of its experiment.
 
-In the following, Chapter 2 explains the background and related work on the topics of text classification (Section 2.1), active learning in general (Section 2.2), and the Core-Set approach to AL more specifically (Section 2.3). In Chapter 3, I will explain my approach to improving the performance of Core-Set for text classification using dimensionality reduction. In Chapters 4 and 5, I will present my experiment as well as discuss its results. Finally, Chapter 6 will conclude the thesis and provide insights on potential future developments of the method. 
+In the following, Chapter 2 explains the background and related work on the topics of text classification (Section 2.1), active learning in general (Section 2.2), the Core-Set approach (Section 2.3), and dimensionality reduction (Section 2.4) more specifically. In Chapter 3, I will describe my approach to modifying Core-Set for text classification using four different approaches. In Chapters 4 and 5, I will present my experiment as well as show and discuss its results. Finally, Chapter 6 will conclude the thesis and provide insights on potential future developments of the method. 
 
 \chapter{Background/Related Work}
 
@@ -197,11 +197,13 @@ The original paper by \cite{DBLP:conf/iclr/SenerS18} attempts to further improve
 
 \section{Dimensionality Reduction}
 
-As mentioned earlier, one of the major challenges of the Core-Set approach (among others) is handling data points with a higher dimensionality (\cite{DBLP:conf/iccv/SinhaED19}). Broadly speaking, this is a phenomenon coined by Richard E. Bellman known as the \textit{curse of dimensionality} (\cite{franccois2007high}). As a result, many algorithms have been developed to transform data from a high-dimensional space into a low-dimensional space. This task directly poses another challenge: managing to reduce the dimensionality of the data while still being able to retain the highest possible amount of information. 
+As mentioned earlier, one of the major challenges of the Core-Set approach is handling data points with a higher dimensionality (\cite{DBLP:conf/iccv/SinhaED19}). Broadly speaking, this is a phenomenon coined by Richard E. Bellman known as the \textit{curse of dimensionality} (\cite{franccois2007high}). 
+% NOT REALLY AS A RESULT...
+As a result, many algorithms have been developed to transform data from a high-dimensional space into a low-dimensional space. This task directly poses another challenge: managing to reduce the dimensionality of the data while still being able to retain the highest possible amount of information. 
 
 One such method is the Principal Components Analysis (PCA), which is one of the most popular linear techniques for dimensionality reduction (\cite{van2009dimensionality}). In essence, PCA linearly transforms the data into a representation that attempts to closely describe the variance of the initial data (\cite{jolliffe2016principal}). Other commonly used linear techniques include Linear Discriminant Analysis (LDA), Multidimensional Scaling (MDS), and Non-negative Matrix Factorization (NMF).
 
-These techniques can be powerful, however they often miss important non-linear structures in high-dimensional data. Therefore, non-linear techniques have been developed such as Isometric Mapping (Isomap) and t-distributed Stochastic Neighbor Embedding (t-SNE). The latter is a relatively modern probablistic approach that has improved upon many other non-linear techniques in creating a single map that reveals structure on many different scales. In addition, it manages to reduce the tendency of SNE to crowd data points together at the center by using a different cost function (\cite{van2008visualizing}). 
+These techniques can be powerful, however they often miss important non-linear structures in high-dimensional data. Therefore, non-linear techniques have been developed such as Isometric Mapping (Isomap) and t-distributed Stochastic Neighbor Embedding (t-SNE). The latter is a relatively modern probablistic approach that has improved upon many other non-linear techniques in creating a single map that reveals structure on many different scales. In addition, it manages to reduce the tendency of Stochastic Neighbour Embedding (SNE) to crowd data points together at the center by using a different cost function (\cite{van2008visualizing}). 
 
 First, it converts the high-dimensional Euclidean distances into conditional probabilities, such that similar data points are assigned higher probabilities and dissimilar data points are assigned very low probabilities. It then creates a similar probability distribution over the lower-dimensional map such that the \textit{Kullback-Leibler divergence} (a measure of how one probability distribution differs from another) is minimized.
 
@@ -209,7 +211,7 @@ This method is especially useful for the visualization of high-dimensional data,
 
 \chapter{Approach}
 
-As mentioned, distance-based methods such as Core-Set can be ineffective in higher dimensions. To overcome this challenge, I propose the application of t-SNE as a dimensionality reduction technique on the training data before employing the Greedy Core-Set strategy. In esssence, this would modify the original k-Center greedy approach in that the distances computed between the points in $ \mathbf{s} $ and the unselected points would be different, since the algorithm would take in reduced embeddings (this modification is noted in the pseudocode for \ref{alg:coreset-tsne}).
+As mentioned, distance-based methods such as Core-Set can be ineffective in higher dimensions. To overcome this challenge, I propose the application of t-SNE as a dimensionality reduction technique on the training data before selecting new points using Core-Set. In essence, this would modify the original k-Center greedy approach in that the distances computed between the points in $ \mathbf{s} $ and the unselected points would be different, since the algorithm would take in reduced embeddings (this modification is noted in the pseudocode for \ref{alg:coreset-tsne}).
 
 \begin{algorithm}
 \caption{t-SNE with k-Center-Greedy}%
@@ -235,7 +237,7 @@ Next, I will examine the effect of pointwise probabilities on the Core-Set algor
 
 To accomplish this, I will be using an uncertainty-based approach. Uncertainty sampling, which was introduced by \cite{DBLP:conf/sigir/LewisG94}, essentially attempts to select the unlabelled examples with the lowest classification certainty. In this case, I specifically opted for an approach similar to that of Breaking-Ties (\cite{DBLP:journals/jmlr/LuoKGHSRH05}), where the instances with the smallest margin between their top two most likely classification probabilities are selected, essentially ``breaking the tie'' between the two most likely classes. In other words, if $ \mathbf{p}_{j, k}^* $ denotes the probability of the $ k $-th most likely class label for the $ j $-th instance, then Breaking-Ties seeks to select instances where $ \mathbf{p}_{j, 1}^* - \mathbf{p}_{j, 2}^* $ is minimal.
 
-This approach resulted in two different implementation ideas: the first, which I will refer to as ``Weighted Greedy Core-Set'' (\ref{alg:wgc}), calculates the uncertainties prior to executing the standard Core-Set algorithm, then multiplies the resulting Core-Set distances and probabilities using weights (in this case, I used a 80-20 weighting in favour of the Core-Set distances). 
+This approach resulted in two different implementation ideas: the first, which I will refer to as ``Weighted Greedy Core-Set'' (\ref{alg:wgc}), calculates the uncertainties prior to executing the standard Core-Set algorithm, then multiplies the resulting Core-Set distances and probabilities using weights (in this case, I used an 80-20 weighting in favour of the Core-Set distances). 
 
 \begin{algorithm}
 \caption{Weighted k-Center-Greedy}%
@@ -258,7 +260,9 @@ This approach resulted in two different implementation ideas: the first, which I
 \end{algorithmic}
 \end{algorithm}
 
-The second, which I will call ``Ranked Weighted Greedy Core-Set'' (\ref{alg:rwgc}), opts to first compute a Core-Set twice the size of the original sample size $b$, then ``re-ranks'' the resulting distances according to Breaking-Ties uncertainties and finally selects the points with the $b$ highest uncertainties.
+The second, which I will call ``Re-ranked Greedy Core-Set'' (\ref{alg:rwgc}), opts to first compute a Core-Set twice the size of the original sample size $b$, then ``re-ranks'' the resulting distances according to Breaking-Ties uncertainties and finally selects the points with the $b$ highest uncertainties.
+
+In theory, these two approaches aim to use uncertainties to improve Core-Set's selections in that if the newly selected set of points should contain instances which also have high uncertainties.
 
 \begin{algorithm}
 \caption{Re-ranked k-Center-Greedy}%
@@ -292,7 +296,7 @@ The second, which I will call ``Ranked Weighted Greedy Core-Set'' (\ref{alg:rwgc
 
 Finally, I will take into account the class distributions within each Core-Set and select points based on the representation of each class. This approach will be called ``Class-Balanced Core-Set'' (\ref{alg:classbalanced}).
 
-The idea with this approach is that the class distribution within our pool of labelled instances should, in theory, reflect the underlying class distribution of the entire dataset. In other words, the query strategy (in this case Core-Set) should attempt to select more or less instances of a certain class depending on the discrepancy between the class distribution of the labelled pool and the ``real'' distribution of that class.
+The basic idea with this approach is that the class distribution within our pool of labelled instances should, in theory, reflect the underlying class distribution of the entire dataset. In other words, the query strategy (in this case Core-Set) should attempt to select more or less instances of a certain class depending on the discrepancy between the class distribution of the labelled pool and the ``real'' distribution of that class.
 
 To this end, I will divide a single query into multiple Core-Set computations, essentially constructing disjunct Core-Set selections for each class. For each class' Core-Set selection, the budget $ b $ (e.g. the amount of selected instances from this class) will depend on the desired class distribution.
 
@@ -321,7 +325,7 @@ In the corresponding pseudocode (\ref{alg:classbalanced}), I did not include an 
 \end{algorithmic}
 \end{algorithm}
 
-The experiment will be conducted with two models on three well-known classification datasets and will measure the performances throughout 5 runs per combination. 
+The experiment will be conducted with two models on three well-known classification datasets and will measure the performances throughout five runs per combination. 
 
 \chapter{Experiment}
 
@@ -476,7 +480,7 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 \multirow{2}{*}{AGN}  & BERT & 0.884 & 0.004 & \bfseries 0.889 & \bfseries 0.010 & 0.874 & 0.012 & 0.881 & 0.010 & 0.873 & 0.011 & 0.785 & 0.221 & 0.866 & 0.016\\ 
  & SetFit & 0.886 & 0.006 & \bfseries 0.902 & \bfseries 0.004 & 0.895 & 0.003 & 0.895 & 0.003 & 0.895 & 0.005 & 0.895 & 0.004 & 0.898 & 0.006 \\
 
-\multirow{2}{*}{MR}  & BERT & 0.806 & 0.011 & \bfseries 0.815 & \bfseries 0.009 & 0.770 & 0.015 & 0.796 & 0.02 & 0.806 & 0.014 & 0.811 & 0.013 & 0.793 & 0.021\\ 
+\multirow{2}{*}{MR}  & BERT & 0.806 & 0.011 & \bfseries 0.815 & \bfseries 0.009 & 0.770 & 0.015 & 0.796 & 0.020 & 0.806 & 0.014 & 0.811 & 0.013 & 0.793 & 0.021\\ 
  & SetFit & 0.869 & 0.006 & \bfseries 0.880 & \bfseries 0.005 & 0.871 & 0.005 & 0.874 & 0.005 & 0.874 & 0.007 & 0.870 & 0.004 & 0.870 & 0.006 \\
  
 \multirow{2}{*}{TREC}  & BERT & 0.904 & 0.018 & \bfseries 0.920 & \bfseries 0.014 & 0.902 & 0.021 & 0.912 & 0.009 & 0.897 & 0.027 & 0.897 & 0.036 & 0.872 & 0.048\\ 
@@ -517,45 +521,77 @@ Final accuracy per dataset, model, and query strategy. We report the mean and st
 
 \end{sidewaystable}
 
-The SetFit learning curves generally outperform the BERT model and seem to show much less variation between the different query strategies. Even in the case of the AL curves with BERT, accuracy differences seem to mainly occur in early iterations. By the final iteration, the mean accuracy scores of the different strategies tend to lie in a similar range. 
+% GENERAL: Comparing models
+Overall, the SetFit learning curves generally outperform the BERT model and seem to show much less variation between the different query strategies. This is reflected no only in the mean curve progressions of each model, but also in the smaller standard deviations of each individual line. Even in the case of BERT's resulting AL curves, the most noticeable accuracy differences seem to mainly occur in early iterations. Generally, the mean accuracy scores of the different strategies tend to lie in a similar range by the final iteration. 
 
-I will first compare and contrast the different results for the training of the BERT model (\ref{fig:bert-curves}). 
+% BERT: comparing datasets
+I will first compare and contrast the different results for the training of the BERT model (\ref{fig:bert-curves}). We can clearly see general upwards trends, to varying degrees based on the dataset. The highest final accuracies are achieved on the TREC dataset, whereas the learning curves for AGN have the fastest increase in early iterations. The latter roughly seem to resemble a saturation curve, with mean accuracy values levelling out around 85\% near the second half of the learning process. On the other hand, the learning curves on MR show a more gradual, steady rise and finish with slightly lower overall accuracies, with all results coming out to just under or around 80\%. 
 
-In the case of AGN and TREC, we can clearly see the curve of Breaking-Ties achieve a higher performance throughout. However, CS-TSNE is able to compete very closely on AGN. Interestingly enough, Random Sampling has managed to achieve similar scores in these cases to the strategies mentioned previously.
+% BERT: comparing query strategies
+When comparing the curves of the different query strategies, we can see that specifically in the case of BERT, CS does indeed seem to underperform when compared to the baseline approaches. This is mainly noticeable when looking at the earlier iterations (between queries 1 to 10). This underperformance becomes even more apparent when considering the fact that the learning curves of Random Sampling are consistently above those of Core-Set. This further reinforces the sentiment that Core-Set may have weaknesses within the domain of text classification. 
 
-When comparing the curves of the different query strategies, we can see that specifically in the case of BERT, Core-Set does indeed seem to underperform. This is mainly noticeable when looking at the earlier iterations (from queries 1 to 10). This underperformance becomes even more apparent when considering the fact that the learning curves of Random Sampling are consistently above those of Core-Set. This further reinforces the sentiment that Core-Set may have weaknesses within the domain of text classification. 
+In the case of AGN and TREC, we can clearly see the curve of BT achieve high performances throughout, although CS-TSNE is able to compete very closely on AGN. Interestingly enough, Random Sampling has managed to achieve similar scores to the strategies mentioned previously in these cases.
 
-We can see that in most cases, the different variations of Core-Set seem to be on par with or more performant than the original Core-Set. Especially Breaking-Ties looks to be a strong contender in all cases and manages to perform similarly to or better than Core-Set and its variants.
+We also observe that in most cases, the different variations of Core-Set seem to be on par with or more performant than the original Core-Set. Especially CS-TSNE looks to be a strong contender in all cases and manages to perform similarly to or better than Core-Set and the remaining variants. Class-Balanced Core-Set, on the other hand, does not seem to show significant accuracy improvements during training in comparison to the regular Core-Set approach. The final results of the respective curves do seem to slightly favour CB-CS over CS. Generally, the two strategies' learning curves show a very similar trend across all three datasets. Weighted Core-Set and Re-ranked Core-Set are in a similar vein to, albeit generally slightly above, the Class-Balanced approach. Both curves fluctuate around the same level or slightly higher than CS, but do not manage to surpass the baseline approaches in early iterations.
 
-Class-Balanced Core-Set, on the other hand, does not seem to show significant accuracy improvements during training in comparison to the regular Core-Set approach. The final results of the respective curves do seem to slightly favour CB-CS over CS. Generally, the two strategies' learning curves show a very similar trend across all three datasets. 
-
-Weighted Core-Set and Re-ranked Core-Set are in a similar vein to, albeit generally slightly above, the Class-Balanced approach. Both curves fluctuate around the same level or slightly higher than CS, but do not manage to surpass the baseline approaches in early iterations.
-
+% SetFit: comparing datasets
 The SetFit learning curves (\ref{fig:setfit-curves}) show much less fluctuation throughout the individual learning curves, as well as smaller discrepancies between the different query strategies during training. 
 
-In the case of MR, all strategies have very similar accuracy curves and bundle tightly around the final iterations. As for AGN and TREC, the margins between the curves are slightly wider, and some differences can be noted when comparing approaches. Again, Breaking-Ties stands out as one of the best strategies, with CS-TSNE generally following a similar trend. In contrast to BERT, CS itself does not seem to underperform in any significant way. Additionally, Random Sampling's accuracy values stay visibly below those of the other query strategies in the second half of each run when considering AGN and TREC.
+In the case of MR, all strategies have very similar accuracy curves and bundle tightly around the final iterations, with all final values somewhere around 87,5\%. For this dataset, the increase throughout the entire process is very minimal, amounting to only around 5\% from the first query to the end of training. As for AGN and TREC, more learning progress is visibile from beginning to end. Moreover, the margins between the curves are slightly wider, and some differences can be noted when comparing the different strategies. For these two datasets, the curves again show early increases around the first five iterations, with the values levelling out around instance number 275. 
 
+% SetFit: comparing query strategies
+Again, Breaking-Ties stands out as one of the best strategies, with CS-TSNE generally following a similar trend. In contrast to BERT, CS itself does not seem to underperform throughout in any significant way. Only in the first half of iterations on TREC can we see some kind of noticeable difference between CS and the other curves. In these earlier instances, CS is outperformed by the baseline strategies as well as CS-TSNE. Similarly to \ref{fig:bert-curves}, the other three CS variations follow a very close trend to that of CS. In the case of SetFit, however, Random Sampling's accuracy values stay visibly below those of the other query strategies in the second half of each run when considering AGN and TREC.
+
+% Accuracy Table
 In \ref{table-results-acc}, I show the reported mean final accuracy across all runs, as well as the standard deviation for each combination of dataset, model and query strategy. Overall, Breaking-Ties dominates for almost every dataset on both models. Only for SetFit does another strategy achieve the highest overall final mean accuracy. Furthermore, we can see that RS outperforms CS when used with BERT throughout all datasets.
 
-However, the results still show small improvements in accuracy for many of the Core-Set variation's results. CS-TSNE most notably shows slightly higher scores than CS in almost all cases, the one exception being TREC with SetFit. 
+However, the results still show small improvements in accuracy for many of the Core-Set variation's results. CS-TSNE most notably shows slightly higher scores than CS in almost all cases, the one exception being TREC with SetFit. This row of results has some other noteworthy differences between query strategies. On one hand, it is the only combination of model and dataset for which CS, as well as all of its four variations, has a higher result than BT. 
 
 Although WCS does have the best result in the case of the TREC dataset with SetFit, the remaining results in its column do not show consistent improvements when compared to CS. A similar sentiment applies to RCS and CS-CB, whose results in comparison to CS seem to be a mixed bag. 
 
 Even so, all of the CS variations also show some kind of improvement in the case of MR with BERT, in which CS has the lowest accuracy overall. Notably, AGN is the only dataset where CS-TSNE, WCS and RCS do not have any impact on the accuracy score in the case of SetFit.
 
+% AUC Table
 \ref{table-results-auc} contains the reported mean AUC (area under curve) and the corresponding standard deviation for each combination of dataset, model and query strategy. The top performing AUC results, similarly to the accuracy table, show BT as having the best results in almost all cases. Unexpectedly, RS manages to reach the highest AUC among all query strategies in the case of MR with BERT.
 
-Again, the CS variations offer some minor improvements in many cases. Here, the similarity between the curves of CS, WCS, RCS and CB-CS becomes more apparent, as the values of these strategies are almost equal in most cases. Nonetheless, CS-TSNE shows higher AUC values than CS across the board. 
+Again, the CS variations offer some minor improvements in many cases. Here, the similarity between the curves of CS, WCS, RCS and CB-CS becomes more apparent, as the values of these strategies are almost equal in most cases. Nonetheless, CS-TSNE shows higher AUC values than CS across the board. The largest improvement was achieved with BERT, namely on TREC (8.2\%), with the second largest being on MR (5.7\%).
 
-As also made evident by the learning curves earlier, the differences in AUC are most drastic in the case of BERT on the TREC dataset.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=0.6]{img/entropy_plots-1.png}
+    \caption{Normalized entropy curves for instances selected during AL with BERT using Core-Set and Class-Balanced Core-Set. The lines represent the mean accuracy and the surrounding tubes represent the standard deviation over five runs.}
+    \label{fig:entropy-plot}
+\end{figure}
 
 \chapter{Discussion}
 
-\dots
+% INTRODUCTION
+Although none of the proposed Core-Set variations manage to get scores consistently as high as the Breaking-Ties approach, we can still gather interesting insights from the conducted experiment. 
+
+% ANSWERING RESEARCH QUESTIONS?
+One presumption prior to the conducting of the experiment was that Core-Set may have mixed results in cases of text classification. Not only that, but according to \cite{DBLP:conf/kdd/0002MM21}, Core-Set's results with BERT sometimes lie even below the performance of Random Sampling. This experiment's results further support this statement, with Core-Set being outperformed by Random Sampling with BERT, both in accuracy and AUC.
+
+% REDUCTION QUESTION
+The experiment has also offered further insights with regard to the research questions. The first modification to Core-Set, which used t-SNE to reduce word embeddings prior to the selection with k-Center greedy, generally managed to improve Core-Set over the three given datasets. Though the differences in the case of SetFit were very minor, we can observe more noticeable improvements in efficiency with BERT, where Core-Set seemed to have its weaknesses originally.  
+
+% UNCERTAINTY BASED QUESTION
+In the case of the two attempts to combine an uncertainty-based approach with Core-Set, the results have shown minor, but generally insignificant improvements. Though WCS and RCS had generally similar results overall, the results are still slightly in favour of WCS due to the improvements on TREC with SetFit and AGN with BERT, in which RCS fell short. Another aspect that favours WCS over RCS is the ease of implementation and interpretability, which is very straightforward in the case of the weighted approach. In addition, WCS does not perform what are essentially two instance selection runs per query, which is the case in the re-ranked approach.
+
+% CLASS BALANCED QUESTION
+Finally, with regard to the third research question, it becomes clear that my proposed class balance-based approach does not manage to improve upon the Core-Set selection. The accuracy and AUC values are, in most cases, either on par with or slightly below those of Core-Set. 
+
+% Limitations
+Naturally, there are some limitations to consider with this experiment. On one hand, the training data used only encompassed three different datasets. These datasets do attempt to cover a variety of purposes, class numbers and sizes, but in order to further verify the effectiveness of the proposed approaches, more datasets should be used. 
+
+Another aspect that was not considered by my experiment is the effect of each approach on the respective runtime. This may be especially relevant when considering a dimensionality reduction algorithm such as t-SNE, which could have a significant impact when training on larger datasets. Furthermore, this experiment's result evaluation only took into account the respective accuracy and AUC metrics. For the purpose of evaluating the results of each strategy, it may be worth considering other commonly used metrics such as the F1-score.
+
+Finally, it is worth underlining the fact that this thesis examined Core-Set as the basic k-Center greedy approach, whereas \cite{DBLP:conf/iclr/SenerS18} propose a slightly optimized, robust k-Center approach that minimizes outliers. This approach was not used for implementation reasons, as the solution for robust k-Center's feasability check depends on Gurobi (\cite{gurobi}), a licensed optimization framework. As a result, the results of Core-Set and the corresponding modifications used in this experiment may not be optimal.
 
 \chapter{Conclusion}
 
-\dots
+In this thesis, I examined the effect of Core-Set as an AL query strategy for text classification tasks and compared it with two baseline approaches using two models across three different datasets. I then created four different variations of Core-Set, each with some modification around the original k-Center greedy algorithm and examined their performance within the same experiment setup. The motivation for doing this was to see if Core-Set does indeed achieve mixed results within the field of text classification and to attempt to work toward a possible improvement in this regard.
+
+The experiment's results show Core-Set produce mixed results in many cases when compared to the baseline strategies. Moreover, the proposed modifications to Core-Set also   
 
 % \chapter*{Acknowledgements} % optional
 % I thank the authors of the webisthesis template for their excellent work!
