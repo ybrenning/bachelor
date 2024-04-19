@@ -138,8 +138,13 @@ def _sample_distribution(num_samples: int,
 
 
 def _get_rebalancing_distribution(num_samples, num_classes, y, y_pred, ignored_classes=[]):
+    # Real class distribution over dataset
     current_class_distribution = _get_class_histogram(y, num_classes)
+    # Class distribution within unlabeled instances
     predicted_class_distribution = _get_class_histogram(y_pred, num_classes)
+    print(current_class_distribution)
+    print("vs")
+    print(predicted_class_distribution)
 
     number_per_class_required_for_balanced_dist = current_class_distribution.max() - current_class_distribution
 
@@ -150,7 +155,7 @@ def _get_rebalancing_distribution(num_samples, num_classes, y, y_pred, ignored_c
     target_distribution = _sample_distribution(num_samples,
                                                optimal_balancing_distribution,
                                                ignored_values=ignored_classes)
-
+    print(target_distribution)
     # balancing_distribution:
     balancing_distribution = np.zeros((num_classes,), dtype=int)
     active_classes = np.array([i for i in range(num_classes) if i not in set(ignored_classes)])
@@ -162,9 +167,11 @@ def _get_rebalancing_distribution(num_samples, num_classes, y, y_pred, ignored_c
         else:
             balancing_distribution[c] = target_distribution[c]
 
+    print(balancing_distribution)
     # The predicted labels does not have enough classes so that a sample with the desired balancing distribution
     # cannot be provided. Try to fill the remainder with other samples from "active classes" instead.
     remainder = target_distribution.sum() - balancing_distribution.sum()
+    print(remainder)
     if remainder > 0:
         current_class_distribution += balancing_distribution
 
@@ -256,6 +263,8 @@ class ClassBalancer(QueryStrategy):
                                                             y_pred,
                                                             ignored_classes=self.ignored_classes)
 
+        print("Final target dist")
+        print(target_distribution)
         active_classes = np.array([i for i in range(clf.num_classes) if i not in set(self.ignored_classes)])
 
         embeddings = clf.embed(dataset)
@@ -263,11 +272,7 @@ class ClassBalancer(QueryStrategy):
         indices_balanced = []
         indices_labeled_tmp = indices_labeled
 
-        n_active_classes = len(active_classes)
-        # Determine size of coreset per class
-        query_dist = create_query_distribution(n, n_active_classes)
-
-        for idx, c in enumerate(active_classes):
+        for c in active_classes:
             class_indices = indices[np.argwhere(y_pred == c)[:, 0]]
             class_indices = np.setdiff1d(class_indices, indices_labeled_tmp)
 
@@ -278,18 +283,12 @@ class ClassBalancer(QueryStrategy):
                 embeddings = normalize(embeddings, axis=1)
 
                 queried_indices = greedy_coreset(
-                    embeddings, class_indices, indices_labeled_tmp, query_dist[c],
+                    embeddings, class_indices, indices_labeled_tmp, target_distribution[c],
                     distance_metric=self.distance_metric, normalized=self.normalize)
 
                 indices_labeled_tmp = np.append(indices_labeled_tmp, class_indices[queried_indices])
 
                 indices_balanced.extend(class_indices[queried_indices].tolist())
-            else:
-                redistributed = create_query_distribution(query_dist[c], n_active_classes - 1)
-
-                zeros_array = np.zeros_like(query_dist)
-                padded = np.concatenate((zeros_array[:len(query_dist) - len(redistributed)], redistributed))
-                query_dist = query_dist + padded
 
         return np.array(indices_balanced)
 

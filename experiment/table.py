@@ -27,7 +27,9 @@ QUERY_STRATEGIES = {
     "gc": "CS",
     "gc-tsne": "CS-TSNE",
     "wgc": "WCS",
-    "rwgc": "RCS"
+    "rwgc": "RCS",
+    "cb": "CS-CB",
+    "ugc": "CS-UMAP"
 }
 
 
@@ -77,10 +79,14 @@ def create_table(dfs, table_type):
                         " & \\bfseries " + str(table_content.get("gc").get("transformer").get(d, (0, 0))[1]) + \
                         " & " + str(table_content.get("gc-tsne", {}).get("transformer", {}).get(d, (0, 0))[0]) + \
                         " & " + str(table_content.get("gc-tsne", {}).get("transformer", {}).get(d, (0, 0))[1]) + \
+                        " & " + str(table_content.get("ugc", {}).get("transformer", {}).get(d, (0, 0))[0]) + \
+                        " & " + str(table_content.get("ugc", {}).get("transformer", {}).get(d, (0, 0))[1]) + \
                         " & " + str(table_content.get("wgc", {}).get("transformer", {}).get(d, (0, 0))[0]) + \
                         " & " + str(table_content.get("wgc", {}).get("transformer", {}).get(d, (0, 0))[1]) + \
                         " & " + str(table_content.get("rwgc", {}).get("transformer", {}).get(d, (0, 0))[0]) + \
                         " & " + str(table_content.get("rwgc", {}).get("transformer", {}).get(d, (0, 0))[1]) + \
+                        " & " + str(table_content.get("cb", {}).get("transformer", {}).get(d, (0, 0))[0]) + \
+                        " & " + str(table_content.get("cb", {}).get("transformer", {}).get(d, (0, 0))[1]) + \
                     "\\\\ \n & SetFit & " + str(table_content.get("random").get("setfit").get(d, (0, 0))[0]) + \
                         " & " + str(table_content.get("random").get("setfit").get(d, (0, 0))[1]) + \
                         " & \\bfseries " + str(table_content.get("lc-bt").get("setfit").get(d, (0, 0))[0]) + \
@@ -89,10 +95,14 @@ def create_table(dfs, table_type):
                         " & " + str(table_content.get("gc").get("setfit").get(d, (0, 0))[1]) + \
                         " & " + str(table_content.get("gc-tsne", {}).get("setfit", {}).get(d, (0, 0))[0]) + \
                         " & " + str(table_content.get("gc-tsne", {}).get("setfit", {}).get(d, (0, 0))[1]) + \
+                        " & " + str(table_content.get("ugc", {}).get("setfit", {}).get(d, (0, 0))[0]) + \
+                        " & " + str(table_content.get("ugc", {}).get("setfit", {}).get(d, (0, 0))[1]) + \
                         " & " + str(table_content.get("wgc", {}).get("setfit", {}).get(d, (0, 0))[0]) + \
                         " & " + str(table_content.get("wgc", {}).get("setfit", {}).get(d, (0, 0))[1]) + \
                         " & " + str(table_content.get("rwgc", {}).get("setfit", {}).get(d, (0, 0))[0]) + \
                         " & " + str(table_content.get("rwgc", {}).get("setfit", {}).get(d, (0, 0))[1]) + \
+                        " & " + str(table_content.get("cb", {}).get("setfit", {}).get(d, (0, 0))[0]) + \
+                        " & " + str(table_content.get("cb", {}).get("setfit", {}).get(d, (0, 0))[1]) + \
                     " \\\\"
         )
 
@@ -112,16 +122,17 @@ def check_nth_result(df, n, type="acc"):
 
 def main():
     results = get_results('yb-coresets')
-    # results = check_for_duplicates(results)
+    results = check_for_duplicates(results)
     results = check_for_reproduciblity(results)
 
     df_acc = assemble_df(results, 'results.csv')
     df_auc = assemble_df(results, 'auc.csv')
-    check_nth_result(df_acc, 1)
-    check_nth_result(df_auc, 1, type="auc")
 
-    # create_table(df_acc, table_type='acc')
-    # create_table(df_auc, table_type='auc')
+    #check_nth_result(df_acc, 0)
+    #check_nth_result(df_auc, 0, type="auc")
+
+    create_table(df_acc, table_type='acc')
+    create_table(df_auc, table_type='auc')
 
 
 if __name__ == "__main__":
